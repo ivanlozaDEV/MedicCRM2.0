@@ -3,7 +3,8 @@ from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from werkzeug.security import generate_password_hash, check_password_hash
 from config import Config
-from models import db, User, Patient, Appointment
+from models import db, Organization
+from models_legacy import User, Patient, Appointment  # Modelos anteriores temporalmente
 from datetime import datetime
 
 app = Flask(__name__)
