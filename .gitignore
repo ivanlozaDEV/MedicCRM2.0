@@ -1,0 +1,27 @@
+# Ignores del proyecto
+.DS_Store
+
+# Backend
+backend/__pycache__/
+backend/.venv/
+backend/*.pyc
+backend/.env
+
+# Frontend
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/.env.local
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# Databases
+*.db
+*.sqlite
