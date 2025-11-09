@@ -93,23 +93,23 @@ export default function Testimonials() {
           ))}
         </div>
 
-        {/* Trust Badges */}
+        {/* Trust Indicators */}
         <div className="mt-16 pt-12 border-t border-gray-200">
           <p className="text-center text-gray-600 mb-8 font-medium">
-            Certificaciones y Cumplimiento
+            Tecnología y Seguridad
           </p>
           <div className="flex flex-wrap justify-center items-center gap-8">
             <div className="bg-gray-50 px-6 py-3 rounded-lg border border-gray-200">
-              <span className="font-bold text-gray-900">HIPAA Compliant</span>
+              <span className="font-bold text-gray-900">Encriptación SSL</span>
             </div>
             <div className="bg-gray-50 px-6 py-3 rounded-lg border border-gray-200">
-              <span className="font-bold text-gray-900">ISO 27001</span>
+              <span className="font-bold text-gray-900">Backups Diarios</span>
             </div>
             <div className="bg-gray-50 px-6 py-3 rounded-lg border border-gray-200">
-              <span className="font-bold text-gray-900">SOC 2 Type II</span>
+              <span className="font-bold text-gray-900">Soporte 24/7</span>
             </div>
             <div className="bg-gray-50 px-6 py-3 rounded-lg border border-gray-200">
-              <span className="font-bold text-gray-900">GDPR Ready</span>
+              <span className="font-bold text-gray-900">99.9% Uptime</span>
             </div>
           </div>
         </div>
