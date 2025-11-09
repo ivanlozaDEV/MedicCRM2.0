@@ -11,6 +11,7 @@ models/
 ├── __init__.py              # SQLAlchemy initialization and exports
 ├── organization.py          # Organizations/Clinics model
 ├── user.py                  # System users model
+├── subscription.py          # Subscription and billing model
 └── (more models coming)
 ```
 
@@ -61,11 +62,120 @@ Represents system users with authentication and profile.
 **Properties:**
 - `full_name`: Returns first_name + last_name
 
+### 3. Subscription (subscriptions)
+Manages organization subscriptions, billing, and plan limits.
+Integrates with LemonSqueezy for payment processing.
+
+**Main fields:**
+- `organization_id`: Reference to organization (unique)
+- `plan_name`: Plan type (free, basic, premium, enterprise)
+- `plan_price`: Price in USD
+- `billing_cycle`: monthly or yearly
+- `status`: trial, active, past_due, canceled, paused
+- `lemonsqueezy_subscription_id`: LemonSqueezy integration
+- `max_users`, `max_patients`: Plan limits
+
+**Methods:**
+- `to_dict()`: Convert to JSON with computed properties
+- `create(org_id, plan_name)`: Create with default limits
+- `change_plan(plan_name)`: Upgrade/downgrade plan
+- `activate()`: Activate subscription
+- `cancel()`: Cancel subscription
+- `pause()`: Pause subscription
+- `mark_past_due()`: Mark as past due
+- `can_add_user()`: Check if can add more users
+- `can_add_patient()`: Check if can add more patients
+- `find_by_organization(org_id)`: Find by organization
+- `find_by_lemonsqueezy_id(id)`: Find by LemonSqueezy ID
+- `get_active_subscriptions()`: Get all active
+- `get_expiring_soon(days)`: Get expiring subscriptions
+- `get_plan_limits(plan_name)`: Get default limits for plan
+
+**Properties:**
+- `is_active`: Check if subscription is active
+- `is_trial`: Check if in trial period
+- `is_expired`: Check if expired
+- `days_until_expiry`: Days remaining
+- `is_paid_plan`: Check if paid plan
+
+**Plan Limits:**
+- Free: 1 user, 50 patients
+- Basic: 3 users, 200 patients
+- Premium: 10 users, 1000 patients
+- Enterprise: 999 users, 999999 patients
+
 ## Usage
 
 ### Import models:
 ```python
-from models import db, Organization, User
+from models import db, Organization, User, Subscription
+```
+
+### Create organization with subscription:
+```python
+# Create organization
+org = Organization.create(
+    name="Medical Clinic",
+    email="contact@clinic.com",
+    city="Quito"
+)
+
+# Create free subscription for new organization
+subscription = Subscription.create(
+    organization_id=org.id,
+    plan_name='free',
+    status='trial'
+)
+```
+
+### Subscription management:
+```python
+# Get subscription
+sub = Subscription.find_by_organization(org_id=1)
+
+# Upgrade plan
+sub.change_plan('premium', billing_cycle='yearly')
+
+# Activate subscription
+from datetime import datetime, timedelta
+sub.activate(
+    period_start=datetime.utcnow(),
+    period_end=datetime.utcnow() + timedelta(days=30)
+)
+
+# Check limits
+if sub.can_add_user():
+    # Create user...
+    pass
+
+# Check subscription status
+if sub.is_active:
+    print(f"Days remaining: {sub.days_until_expiry}")
+
+# Cancel subscription
+sub.cancel()
+```
+
+### LemonSqueezy integration:
+```python
+# Update with LemonSqueezy data
+sub.update(
+    lemonsqueezy_subscription_id="ls_sub_123456",
+    lemonsqueezy_customer_id="ls_cust_789",
+    lemonsqueezy_variant_id="ls_var_premium_monthly"
+)
+
+# Find by LemonSqueezy ID
+sub = Subscription.find_by_lemonsqueezy_id("ls_sub_123456")
+```
+
+### Query subscriptions:
+```python
+# Get all active subscriptions
+active = Subscription.get_active_subscriptions()
+
+# Get subscriptions expiring in 7 days
+expiring = Subscription.get_expiring_soon(days=7)
 ```
 
 ### Create a user:

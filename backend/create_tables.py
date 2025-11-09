@@ -5,6 +5,7 @@ Run: python create_tables.py
 from app import app, db
 from models.organization import Organization
 from models.user import User
+from models.subscription import Subscription
 
 def create_all_tables():
     """Create all tables in the database"""
@@ -18,6 +19,7 @@ def create_all_tables():
         print("\nAvailable tables:")
         print("  - organizations")
         print("  - users")
+        print("  - subscriptions")
         
         # Verify tables exist
         inspector = db.inspect(db.engine)
