@@ -31,6 +31,12 @@ class User(db.Model):
     phone = db.Column(db.String(20))
     photo_url = db.Column(db.String(255))
     
+    # Professional Information (for medical staff)
+    medical_license = db.Column(db.String(100))  # License number
+    professional_id = db.Column(db.String(100))  # Professional ID (e.g., Cedula Profesional)
+    specialties = db.Column(db.Text)  # JSON array of specialties
+    # Example: '["Cardiology", "Internal Medicine"]'
+    
     # Password Reset
     reset_token = db.Column(db.String(100))
     reset_token_expires = db.Column(db.DateTime)
@@ -50,6 +56,33 @@ class User(db.Model):
     def full_name(self):
         """Returns the full name of the user"""
         return f"{self.first_name} {self.last_name}"
+    
+    @property
+    def specialties_list(self):
+        """
+        Returns specialties as a Python list.
+        
+        Returns:
+            list: List of specialty strings
+        """
+        if not self.specialties:
+            return []
+        
+        import json
+        try:
+            return json.loads(self.specialties)
+        except (json.JSONDecodeError, TypeError):
+            return []
+    
+    @property
+    def is_medical_professional(self):
+        """
+        Check if user has medical credentials.
+        
+        Returns:
+            bool: True if has license or professional ID
+        """
+        return bool(self.medical_license or self.professional_id)
     
     def to_dict(self, include_sensitive=False):
         """
@@ -71,6 +104,12 @@ class User(db.Model):
             'full_name': self.full_name,
             'phone': self.phone,
             'photo_url': self.photo_url,
+            'professional_info': {
+                'medical_license': self.medical_license,
+                'professional_id': self.professional_id,
+                'specialties': self.specialties_list,
+                'is_medical_professional': self.is_medical_professional
+            },
             'is_active': self.is_active,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
@@ -82,6 +121,48 @@ class User(db.Model):
             data['reset_token_expires'] = self.reset_token_expires.isoformat() if self.reset_token_expires else None
         
         return data
+    
+    def set_specialties(self, specialties_list):
+        """
+        Set user specialties from a list.
+        
+        Args:
+            specialties_list (list): List of specialty strings
+        """
+        import json
+        
+        if not isinstance(specialties_list, list):
+            raise ValueError("Specialties must be a list")
+        
+        self.specialties = json.dumps(specialties_list)
+        self.updated_at = datetime.utcnow()
+        db.session.commit()
+    
+    def add_specialty(self, specialty):
+        """
+        Add a specialty to the user.
+        
+        Args:
+            specialty (str): Specialty name to add
+        """
+        current_specialties = self.specialties_list
+        
+        if specialty not in current_specialties:
+            current_specialties.append(specialty)
+            self.set_specialties(current_specialties)
+    
+    def remove_specialty(self, specialty):
+        """
+        Remove a specialty from the user.
+        
+        Args:
+            specialty (str): Specialty name to remove
+        """
+        current_specialties = self.specialties_list
+        
+        if specialty in current_specialties:
+            current_specialties.remove(specialty)
+            self.set_specialties(current_specialties)
     
     @classmethod
     def create(cls, password, **kwargs):
