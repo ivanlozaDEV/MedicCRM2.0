@@ -13,6 +13,7 @@ models/
 ├── user.py                  # System users model
 ├── subscription.py          # Subscription and billing model
 ├── role.py                  # Roles and permissions model
+├── permission.py            # System permissions model
 └── (more models coming)
 ```
 
@@ -139,11 +140,47 @@ Supports both system-defined and custom roles.
 - Receptionist (Purple #7C3AED): Scheduling access
 - Accountant (Orange #EA580C): Billing access
 
+### 5. Permission (permissions)
+System-wide permissions that define what actions can be performed.
+Permissions are assigned to roles via RolePermission model.
+
+**Main fields:**
+- `module_key`: Unique identifier (e.g., 'patients.view')
+- `display_name`: UI-friendly name
+- `description`: What the permission allows
+- `category`: clinical, administrative, or system
+
+**Methods:**
+- `to_dict()`: Convert to JSON
+- `create(key, name, category)`: Create permission
+- `create_default_permissions()`: Setup all default perms
+- `find_by_key(module_key)`: Find by key
+- `find_by_category(category)`: Get category perms
+- `get_all_grouped()`: Get all grouped by category
+
+**Permission Categories:**
+- **Clinical**: Patient care, appointments, medical records, prescriptions
+- **Administrative**: Billing, payments, reports
+- **System**: Users, roles, settings, organization
+
+**Default Permissions** (35 total):
+- Patients: view, create, edit, delete
+- Appointments: view, create, edit, delete
+- Medical Records: view, create, edit, delete
+- Prescriptions: view, create, edit
+- Billing: view, create, edit, delete
+- Payments: view, process
+- Reports: view, export
+- Users: view, create, edit, delete
+- Roles: view, create, edit, delete
+- Settings: view, edit
+- Organization: edit
+
 ## Usage
 
 ### Import models:
 ```python
-from models import db, Organization, User, Subscription, Role
+from models import db, Organization, User, Subscription, Role, Permission
 ```
 
 ### Create organization with subscription:
@@ -165,6 +202,31 @@ subscription = Subscription.create(
 # Create system roles for organization
 roles = Role.create_system_roles(org.id)
 print(f"Created {len(roles)} system roles")
+
+# Create default permissions
+permissions = Permission.create_default_permissions()
+print(f"Created {len(permissions)} permissions")
+```
+
+### Permission management:
+```python
+# Get all permissions grouped by category
+grouped = Permission.get_all_grouped()
+# Returns: {'clinical': [...], 'administrative': [...], 'system': [...]}
+
+# Get permissions by category
+clinical_perms = Permission.find_by_category('clinical')
+
+# Find specific permission
+perm = Permission.find_by_key('patients.view')
+
+# Create custom permission
+custom_perm = Permission.create(
+    module_key='lab_tests.view',
+    display_name='View Lab Tests',
+    category='clinical',
+    description='View laboratory test results'
+)
 ```
 
 ### Role management:

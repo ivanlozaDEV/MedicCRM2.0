@@ -7,6 +7,7 @@ from models.organization import Organization
 from models.user import User
 from models.subscription import Subscription
 from models.role import Role
+from models.permission import Permission
 
 def create_all_tables():
     """Create all tables in the database"""
@@ -22,6 +23,7 @@ def create_all_tables():
         print("  - users")
         print("  - subscriptions")
         print("  - roles")
+        print("  - permissions")
         
         # Verify tables exist
         inspector = db.inspect(db.engine)
@@ -30,6 +32,11 @@ def create_all_tables():
         print(f"\n📊 Total tables in DB: {len(tables)}")
         for table in tables:
             print(f"   ✓ {table}")
+        
+        # Create default permissions
+        print("\n🔐 Creating default permissions...")
+        permissions = Permission.create_default_permissions()
+        print(f"✅ Created {len(permissions)} permissions")
 
 if __name__ == '__main__':
     create_all_tables()
