@@ -13,6 +13,7 @@ from models.role import Role
 from models.user_role import UserRole
 from models.role_permission import RolePermission
 from models.permission import Permission
+from seed_default_roles import seed_default_roles_for_organization
 from datetime import datetime
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/api/auth')
@@ -52,13 +53,33 @@ def signup():
                 'message': 'Email already registered'
             }), 400
         
+        # Generate unique slug for organization
+        import re
+        base_slug = re.sub(r'[^a-z0-9]+', '-', data['organization_name'].lower()).strip('-')
+        slug = base_slug
+        counter = 1
+        while Organization.query.filter_by(slug=slug).first():
+            slug = f"{base_slug}-{counter}"
+            counter += 1
+        
         # Create organization
         organization = Organization(
             name=data['organization_name'],
+            slug=slug,
             is_active=True
         )
         db.session.add(organization)
         db.session.flush()  # Get organization ID
+        
+        print(f"✅ Created organization: {organization.name} (/{organization.slug})")
+        
+        # Seed default roles with permissions for this organization
+        try:
+            seed_default_roles_for_organization(organization.id)
+            print(f"✅ Seeded default roles for organization {organization.id}")
+        except Exception as role_error:
+            print(f"⚠️  Warning: Could not seed default roles: {role_error}")
+            # Continue anyway - organization is created
         
         # Create username from email
         username = data['email'].split('@')[0]
@@ -81,18 +102,20 @@ def signup():
         db.session.add(user)
         db.session.flush()  # Get user ID
         
-        # Create or get Admin role
+        # Get Administrador role (created by seed_default_roles)
         admin_role = Role.query.filter_by(
             organization_id=organization.id,
-            name='Admin'
+            name='Administrador'
         ).first()
         
         if not admin_role:
+            # Fallback: create basic admin role if seed failed
+            print("⚠️  Admin role not found, creating fallback...")
             admin_role = Role(
                 organization_id=organization.id,
-                name='Admin',
+                name='Administrador',
                 description='Administrador con todos los permisos',
-                color='#3B82F6',
+                color='#6366F1',
                 is_system=True,
                 created_by=user.id
             )
@@ -233,7 +256,7 @@ def get_current_user():
             role_permissions = RolePermission.query.filter_by(role_id=ur.role_id).all()
             for rp in role_permissions:
                 if rp.permission and rp.permission_id not in permission_ids:
-                    permissions.append(rp.permission.code)
+                    permissions.append(rp.permission.module_key)
                     permission_ids.add(rp.permission_id)
         
         return jsonify({

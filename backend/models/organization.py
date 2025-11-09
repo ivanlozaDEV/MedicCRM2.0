@@ -14,6 +14,8 @@ class Organization(db.Model):
     
     # Información básica
     name = db.Column(db.String(200), nullable=False, index=True)
+    slug = db.Column(db.String(100), unique=True, nullable=False, index=True)
+    # slug es usado para URLs: mediccrm.com/{slug}/dashboard
     legal_name = db.Column(db.String(200))
     tax_id = db.Column(db.String(50), unique=True)
     
@@ -51,6 +53,7 @@ class Organization(db.Model):
         return {
             'id': self.id,
             'name': self.name,
+            'slug': self.slug,
             'legal_name': self.legal_name,
             'tax_id': self.tax_id,
             'email': self.email,
