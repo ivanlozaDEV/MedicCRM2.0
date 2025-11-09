@@ -4,23 +4,44 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
-export default function LoginPage() {
+export default function SignupPage() {
   const router = useRouter();
   const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
     email: '',
     password: '',
+    confirmPassword: '',
+    organizationName: '',
   });
-  const [rememberMe, setRememberMe] = useState(false);
+  const [acceptTerms, setAcceptTerms] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    // Validaciones
+    if (formData.password !== formData.confirmPassword) {
+      setError('Las contraseñas no coinciden');
+      return;
+    }
+
+    if (formData.password.length < 8) {
+      setError('La contraseña debe tener al menos 8 caracteres');
+      return;
+    }
+
+    if (!acceptTerms) {
+      setError('Debes aceptar los términos y condiciones');
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      // TODO: Implementar llamada al backend para login
+      // TODO: Implementar llamada al backend para registro
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
       
       // Simulación temporal
@@ -30,7 +51,7 @@ export default function LoginPage() {
       router.push('/dashboard');
       
     } catch (err) {
-      setError('Credenciales incorrectas. Por favor intenta de nuevo.');
+      setError('Error al crear la cuenta. Por favor intenta de nuevo.');
     } finally {
       setIsLoading(false);
     }
@@ -70,10 +91,10 @@ export default function LoginPage() {
             </Link>
             
             <h2 className="text-3xl font-bold text-gray-900 mb-2">
-              Bienvenido de nuevo
+              Crea tu cuenta
             </h2>
             <p className="text-gray-600">
-              Ingresa a tu cuenta para continuar
+              Comienza tu prueba gratuita de 14 días
             </p>
           </div>
 
@@ -89,9 +110,61 @@ export default function LoginPage() {
             </div>
           )}
 
-          {/* Login Form */}
-          <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          {/* Signup Form */}
+          <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
             <div className="space-y-4">
+              {/* Name Fields */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">
+                    Nombre
+                  </label>
+                  <input
+                    id="firstName"
+                    name="firstName"
+                    type="text"
+                    required
+                    value={formData.firstName}
+                    onChange={handleChange}
+                    className="appearance-none relative block w-full px-4 py-3 border border-gray-300 rounded-lg placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    placeholder="Juan"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-2">
+                    Apellido
+                  </label>
+                  <input
+                    id="lastName"
+                    name="lastName"
+                    type="text"
+                    required
+                    value={formData.lastName}
+                    onChange={handleChange}
+                    className="appearance-none relative block w-full px-4 py-3 border border-gray-300 rounded-lg placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    placeholder="Pérez"
+                  />
+                </div>
+              </div>
+
+              {/* Organization Name */}
+              <div>
+                <label htmlFor="organizationName" className="block text-sm font-medium text-gray-700 mb-2">
+                  Nombre de la Clínica/Consultorio
+                </label>
+                <input
+                  id="organizationName"
+                  name="organizationName"
+                  type="text"
+                  required
+                  value={formData.organizationName}
+                  onChange={handleChange}
+                  className="appearance-none relative block w-full px-4 py-3 border border-gray-300 rounded-lg placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  placeholder="Clínica Ejemplo"
+                />
+              </div>
+
               {/* Email Field */}
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
@@ -110,7 +183,7 @@ export default function LoginPage() {
                 />
               </div>
 
-              {/* Password Field */}
+              {/* Password Fields */}
               <div>
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
                   Contraseña
@@ -119,37 +192,53 @@ export default function LoginPage() {
                   id="password"
                   name="password"
                   type="password"
-                  autoComplete="current-password"
+                  autoComplete="new-password"
                   required
                   value={formData.password}
                   onChange={handleChange}
                   className="appearance-none relative block w-full px-4 py-3 border border-gray-300 rounded-lg placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  placeholder="••••••••"
+                  placeholder="Mínimo 8 caracteres"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+                  Confirmar Contraseña
+                </label>
+                <input
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  type="password"
+                  autoComplete="new-password"
+                  required
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  className="appearance-none relative block w-full px-4 py-3 border border-gray-300 rounded-lg placeholder-gray-400 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  placeholder="Repite tu contraseña"
                 />
               </div>
             </div>
 
-            {/* Remember Me & Forgot Password */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <input
-                  id="remember-me"
-                  name="remember-me"
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer"
-                />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700 cursor-pointer">
-                  Recordarme
-                </label>
-              </div>
-
-              <div className="text-sm">
-                <Link href="/forgot-password" className="font-medium text-blue-600 hover:text-blue-700 transition-colors">
-                  ¿Olvidaste tu contraseña?
+            {/* Terms and Conditions */}
+            <div className="flex items-start">
+              <input
+                id="accept-terms"
+                name="accept-terms"
+                type="checkbox"
+                checked={acceptTerms}
+                onChange={(e) => setAcceptTerms(e.target.checked)}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer mt-1"
+              />
+              <label htmlFor="accept-terms" className="ml-2 block text-sm text-gray-700 cursor-pointer">
+                Acepto los{' '}
+                <Link href="/terms" className="font-medium text-blue-600 hover:text-blue-700">
+                  términos y condiciones
                 </Link>
-              </div>
+                {' '}y la{' '}
+                <Link href="/privacy" className="font-medium text-blue-600 hover:text-blue-700">
+                  política de privacidad
+                </Link>
+              </label>
             </div>
 
             {/* Submit Button */}
@@ -165,10 +254,10 @@ export default function LoginPage() {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    Iniciando sesión...
+                    Creando cuenta...
                   </>
                 ) : (
-                  'Iniciar Sesión'
+                  'Crear Cuenta Gratis'
                 )}
               </button>
             </div>
@@ -200,11 +289,11 @@ export default function LoginPage() {
             </div>
           </form>
 
-          {/* Sign Up Link */}
+          {/* Login Link */}
           <p className="text-center text-sm text-gray-600">
-            ¿No tienes una cuenta?{' '}
-            <Link href="/signup" className="font-medium text-blue-600 hover:text-blue-700 transition-colors">
-              Regístrate gratis
+            ¿Ya tienes una cuenta?{' '}
+            <Link href="/login" className="font-medium text-blue-600 hover:text-blue-700 transition-colors">
+              Inicia sesión
             </Link>
           </p>
 
@@ -217,24 +306,25 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* Right Side - Image/Info */}
+      {/* Right Side - Info */}
       <div className="hidden lg:flex lg:flex-1 bg-blue-600 items-center justify-center p-12">
         <div className="max-w-md text-white">
           <h2 className="text-4xl font-bold mb-6">
-            Gestiona tu práctica médica de forma inteligente
+            Únete a cientos de profesionales de la salud
           </h2>
           <p className="text-xl text-blue-100 mb-8">
-            Accede a tu dashboard para gestionar pacientes, citas, equipo médico y más.
+            Empieza tu prueba gratuita hoy y descubre cómo DoctorCRM puede 
+            transformar tu práctica médica.
           </p>
           
-          <div className="space-y-4">
+          <div className="space-y-4 mb-8">
             <div className="flex items-start space-x-3">
               <div className="flex-shrink-0">
                 <svg className="w-6 h-6 text-blue-200" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
               </div>
-              <p className="text-blue-100">Gestión centralizada de pacientes</p>
+              <p className="text-blue-100">14 días de prueba gratis, sin tarjeta de crédito</p>
             </div>
             
             <div className="flex items-start space-x-3">
@@ -243,7 +333,7 @@ export default function LoginPage() {
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
               </div>
-              <p className="text-blue-100">Agenda inteligente y recordatorios automáticos</p>
+              <p className="text-blue-100">Configuración en menos de 5 minutos</p>
             </div>
             
             <div className="flex items-start space-x-3">
@@ -252,7 +342,7 @@ export default function LoginPage() {
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
               </div>
-              <p className="text-blue-100">Reportes y analíticas en tiempo real</p>
+              <p className="text-blue-100">Soporte técnico 24/7 incluido</p>
             </div>
             
             <div className="flex items-start space-x-3">
@@ -261,7 +351,21 @@ export default function LoginPage() {
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
               </div>
-              <p className="text-blue-100">Seguridad y encriptación de datos</p>
+              <p className="text-blue-100">Cancela cuando quieras, sin compromisos</p>
+            </div>
+          </div>
+
+          <div className="bg-white/10 backdrop-blur-sm p-6 rounded-xl border border-white/20">
+            <p className="text-blue-50 text-sm mb-2">Más de 500 clínicas confían en nosotros</p>
+            <div className="flex items-center space-x-2">
+              <div className="flex -space-x-2">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div key={i} className="w-8 h-8 rounded-full bg-blue-500 border-2 border-white flex items-center justify-center text-xs font-bold">
+                    {String.fromCharCode(64 + i)}
+                  </div>
+                ))}
+              </div>
+              <span className="text-white font-semibold">+495 más</span>
             </div>
           </div>
         </div>
