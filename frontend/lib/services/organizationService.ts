@@ -8,9 +8,18 @@ import { apiRequest } from '../api';
 export interface Organization {
   id: number;
   name: string;
+  slug?: string;
+  legal_name?: string;
+  tax_id?: string;
   description?: string;
   logo_url?: string;
   primary_color?: string;
+  secondary_color?: string;
+  accent_color?: string;
+  success_color?: string;
+  warning_color?: string;
+  error_color?: string;
+  info_color?: string;
   address_line1?: string;
   address_line2?: string;
   city?: string;

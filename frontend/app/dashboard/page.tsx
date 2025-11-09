@@ -6,7 +6,6 @@ import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { userService } from '@/lib/services/userService';
 import { roleService } from '@/lib/services/roleService';
-import { specialtyService } from '@/lib/services/specialtyService';
 
 export default function DashboardPage() {
   const { user, organization, permissions } = useAuth();
@@ -30,16 +29,28 @@ export default function DashboardPage() {
       setIsLoading(true);
 
       // Cargar datos en paralelo
-      const [usersResponse, rolesResponse, specialtiesResponse] = await Promise.all([
-        userService.getAll({ organization_id: organization.id, active_only: true }),
+      const [usersResponse, rolesResponse] = await Promise.all([
+        userService.getAll({ organization_id: organization.id, active_only: true, include_specialties: true }),
         roleService.getAll(organization.id),
-        specialtyService.getAll({ active_only: true }),
       ]);
+
+      // Contar especialidades únicas que tienen los usuarios del equipo
+      const uniqueSpecialties = new Set<number>();
+      if (usersResponse.data && Array.isArray(usersResponse.data)) {
+        usersResponse.data.forEach((user: any) => {
+          const userSpecialties = user.professional_info?.specialties || user.specialties || [];
+          userSpecialties.forEach((specialty: any) => {
+            if (specialty.id) {
+              uniqueSpecialties.add(specialty.id);
+            }
+          });
+        });
+      }
 
       setStats({
         userCount: usersResponse.count || 0,
         roleCount: rolesResponse.count || 0,
-        specialtyCount: specialtiesResponse.count || 0,
+        specialtyCount: uniqueSpecialties.size,
         userLimit: 50, // TODO: Obtener del plan de suscripción
       });
     } catch (error) {
@@ -190,22 +201,56 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Panel de Control</h1>
-        <p className="text-gray-600 mt-1">Bienvenido de nuevo, aquí está el resumen de tu organización</p>
+      {/* Welcome Header */}
+      <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">
+              Bienvenido, {user?.first_name}
+            </h1>
+            <p className="text-gray-600 mt-1">
+              {organization?.name || 'Mi Organización'}
+            </p>
+          </div>
+          <div className="hidden md:block">
+            <div className="text-right">
+              <div className="text-sm text-gray-500">Hoy</div>
+              <div className="text-lg font-semibold text-gray-900">
+                {new Date().toLocaleDateString('es-ES', { 
+                  weekday: 'long', 
+                  year: 'numeric', 
+                  month: 'long', 
+                  day: 'numeric' 
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {statsCards.map((stat, index) => (
-          <StatsCard
+          <div
             key={index}
-            title={stat.title}
-            value={stat.value}
-            icon={stat.icon}
-            colorClass={stat.colorClass}
-          />
+            className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-all"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-600">{stat.title}</p>
+                <p className="text-3xl font-bold text-gray-900 mt-2">{stat.value}</p>
+              </div>
+              <div className={`${stat.colorClass} rounded-lg p-3 shadow-sm`}>
+                {stat.icon}
+              </div>
+            </div>
+            <div className="mt-4 pt-4 border-t border-gray-100">
+              <div className="flex items-center text-sm">
+                <div className={`w-2 h-2 rounded-full mr-2 ${stat.colorClass}`}></div>
+                <span className="text-gray-500">Actualizado hoy</span>
+              </div>
+            </div>
+          </div>
         ))}
       </div>
 
@@ -213,16 +258,16 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Quick Actions */}
         <div className="lg:col-span-2">
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="bg-white rounded-xl border border-gray-200 p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Acciones Rápidas</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {visibleActions.map((action, index) => (
                 <Link
                   key={index}
                   href={action.href}
-                  className="flex items-start space-x-4 p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-sm transition-all"
+                  className={`flex items-start space-x-4 p-4 rounded-lg border-2 border-transparent hover:border-gray-300 hover:shadow-md transition-all ${action.color}`}
                 >
-                  <div className={`${action.color} rounded-lg p-2`}>
+                  <div className="rounded-lg p-2">
                     {action.icon}
                   </div>
                   <div className="flex-1">
@@ -240,13 +285,15 @@ export default function DashboardPage() {
 
         {/* Recent Activity */}
         <div className="lg:col-span-1">
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="bg-white rounded-xl border border-gray-200 p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Actividad Reciente</h2>
             <div className="space-y-4">
               {recentActivity.map((activity, index) => (
                 <div key={index} className="flex items-start space-x-3">
-                  <div className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
-                    <span className="text-xs font-medium text-gray-600">{activity.avatar}</span>
+                  <div className="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                    <span className="text-xs font-medium text-blue-600">
+                      {activity.avatar}
+                    </span>
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-gray-900">
@@ -260,7 +307,7 @@ export default function DashboardPage() {
             </div>
             <Link 
               href="/dashboard/activity" 
-              className="block text-center text-sm text-blue-600 hover:text-blue-700 font-medium mt-4 pt-4 border-t border-gray-200"
+              className="block text-center text-sm text-blue-600 font-medium mt-4 pt-4 border-t border-gray-200 hover:underline transition-colors"
             >
               Ver toda la actividad
             </Link>
@@ -268,19 +315,27 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Subscription Alert (if needed) */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+      {/* Subscription Alert */}
+      <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
         <div className="flex items-start">
           <div className="flex-shrink-0">
-            <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg 
+              className="w-5 h-5 text-blue-600" 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
           <div className="ml-3 flex-1">
-            <h3 className="text-sm font-medium text-blue-900">Plan Professional</h3>
-            <p className="text-sm text-blue-700 mt-1">
-              Estás usando 24 de 50 usuarios disponibles. 
-              <Link href="/dashboard/subscription" className="font-medium underline ml-1">
+            <h3 className="text-sm font-medium text-gray-900">Plan Professional</h3>
+            <p className="text-sm text-gray-700 mt-1">
+              Estás usando {stats.userCount} de {stats.userLimit} usuarios disponibles. 
+              <Link 
+                href="/dashboard/subscription" 
+                className="font-medium text-blue-600 underline ml-1 hover:no-underline transition-all"
+              >
                 Mejorar plan
               </Link>
             </p>
