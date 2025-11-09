@@ -14,6 +14,7 @@ export interface Role {
   is_system: boolean;
   is_admin: boolean;
   user_count: number;
+  permission_count: number;
   created_by?: number;
   created_at: string;
   updated_at: string;
@@ -86,6 +87,25 @@ export const roleService = {
   initSystemRoles: async (organization_id: number): Promise<{ success: boolean; message: string; data: Role[] }> => {
     return apiRequest(`/roles/organization/${organization_id}/init-system-roles`, {
       method: 'POST',
+    });
+  },
+
+  /**
+   * Get permissions assigned to a role
+   */
+  getPermissions: async (roleId: number): Promise<{ success: boolean; data: any }> => {
+    return apiRequest(`/roles/${roleId}/permissions`, {
+      method: 'GET',
+    });
+  },
+
+  /**
+   * Update permissions for a role
+   */
+  updatePermissions: async (roleId: number, permissionIds: number[]): Promise<{ success: boolean; message: string; data: any }> => {
+    return apiRequest(`/roles/${roleId}/permissions`, {
+      method: 'PUT',
+      body: JSON.stringify({ permission_ids: permissionIds }),
     });
   },
 };

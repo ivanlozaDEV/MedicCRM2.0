@@ -68,16 +68,22 @@ class Role(db.Model):
     @property
     def user_count(self):
         """Get count of users with this role"""
-        # This will be implemented when UserRole model is created
-        # For now, return 0
-        return 0
+        from models.user_role import UserRole
+        return UserRole.query.filter_by(role_id=self.id).count()
     
-    def to_dict(self, include_users=False):
+    @property
+    def permission_count(self):
+        """Get count of permissions assigned to this role"""
+        from models.role_permission import RolePermission
+        return RolePermission.query.filter_by(role_id=self.id).count()
+    
+    def to_dict(self, include_users=False, include_permissions=False):
         """
         Convert model to dictionary for JSON serialization.
         
         Args:
             include_users (bool): Include list of users with this role
+            include_permissions (bool): Include count of permissions
             
         Returns:
             dict: Role data as dictionary
@@ -91,14 +97,24 @@ class Role(db.Model):
             'is_system': self.is_system,
             'is_admin': self.is_admin,
             'user_count': self.user_count,
+            'permission_count': self.permission_count,
             'created_by': self.created_by,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }
         
         if include_users:
-            # This will be implemented when UserRole model is created
-            data['users'] = []
+            from models.user_role import UserRole
+            user_roles = UserRole.query.filter_by(role_id=self.id).all()
+            data['users'] = [ur.to_dict() for ur in user_roles]
+        
+        if include_permissions:
+            from models.role_permission import RolePermission
+            from models.permission import Permission
+            role_perms = RolePermission.query.filter_by(role_id=self.id).all()
+            perm_ids = [rp.permission_id for rp in role_perms]
+            permissions = Permission.query.filter(Permission.id.in_(perm_ids)).all() if perm_ids else []
+            data['permissions'] = [p.to_dict() for p in permissions]
         
         return data
     

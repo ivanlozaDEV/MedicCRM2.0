@@ -3,7 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { roleService } from '@/lib/services/roleService';
+import { permissionService } from '@/lib/services/permissionService';
 import type { Role } from '@/lib/services/roleService';
+import type { Permission, PermissionsGrouped } from '@/lib/services/permissionService';
 
 interface RoleModalProps {
   isOpen: boolean;
@@ -41,6 +43,54 @@ export default function RoleModal({ isOpen, onClose, onSuccess, role, mode }: Ro
     is_system: false,
   });
 
+  // Estados para permisos
+  const [permissionsGrouped, setPermissionsGrouped] = useState<PermissionsGrouped | null>(null);
+  const [selectedPermissions, setSelectedPermissions] = useState<number[]>([]);
+  const [loadingPermissions, setLoadingPermissions] = useState(false);
+  const [showPermissions, setShowPermissions] = useState(false);
+
+  // Cargar permisos disponibles
+  useEffect(() => {
+    if (isOpen) {
+      loadPermissions();
+    }
+  }, [isOpen]);
+
+  const loadPermissions = async () => {
+    try {
+      setLoadingPermissions(true);
+      const response = await permissionService.getAll({ grouped: true });
+      if (response.success && response.data) {
+        setPermissionsGrouped(response.data as PermissionsGrouped);
+      }
+    } catch (err) {
+      console.error('Error loading permissions:', err);
+    } finally {
+      setLoadingPermissions(false);
+    }
+  };
+
+  // Cargar permisos del rol si estamos editando
+  useEffect(() => {
+    if (mode === 'edit' && role && isOpen) {
+      loadRolePermissions();
+    }
+  }, [mode, role, isOpen]);
+
+  const loadRolePermissions = async () => {
+    if (!role) return;
+    
+    try {
+      const response = await roleService.getPermissions(role.id);
+      if (response.success && response.data.permissions) {
+        const permissionIds = response.data.permissions.map((p: Permission) => p.id);
+        setSelectedPermissions(permissionIds);
+      }
+    } catch (err) {
+      console.error('Error loading role permissions:', err);
+    }
+  };
+
   // Cargar datos del rol si estamos editando
   useEffect(() => {
     if (mode === 'edit' && role) {
@@ -58,9 +108,39 @@ export default function RoleModal({ isOpen, onClose, onSuccess, role, mode }: Ro
         color: '#3B82F6',
         is_system: false,
       });
+      setSelectedPermissions([]);
     }
     setError('');
   }, [mode, role, isOpen]);
+
+  const togglePermission = (permissionId: number) => {
+    setSelectedPermissions(prev => {
+      if (prev.includes(permissionId)) {
+        return prev.filter(id => id !== permissionId);
+      } else {
+        return [...prev, permissionId];
+      }
+    });
+  };
+
+  const toggleCategoryPermissions = (category: 'system' | 'clinical' | 'administrative') => {
+    if (!permissionsGrouped) return;
+    
+    const categoryPermissions = permissionsGrouped[category];
+    const categoryPermissionIds = categoryPermissions.map(p => p.id);
+    const allSelected = categoryPermissionIds.every(id => selectedPermissions.includes(id));
+    
+    if (allSelected) {
+      // Deselect all from this category
+      setSelectedPermissions(prev => prev.filter(id => !categoryPermissionIds.includes(id)));
+    } else {
+      // Select all from this category
+      setSelectedPermissions(prev => {
+        const newIds = categoryPermissionIds.filter(id => !prev.includes(id));
+        return [...prev, ...newIds];
+      });
+    }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -104,17 +184,29 @@ export default function RoleModal({ isOpen, onClose, onSuccess, role, mode }: Ro
       };
 
       let response;
+      let savedRoleId: number | undefined;
+
       if (mode === 'create') {
         response = await roleService.create(payload);
+        savedRoleId = response?.data?.id;
       } else if (role) {
         // No permitir cambiar el nombre de roles del sistema
         if (role.is_system) {
           payload.name = role.name; // Mantener el nombre original
         }
         response = await roleService.update(role.id, payload);
+        savedRoleId = role.id;
       }
 
-      if (response?.success) {
+      if (response?.success && savedRoleId) {
+        // Guardar permisos
+        try {
+          await roleService.updatePermissions(savedRoleId, selectedPermissions);
+        } catch (permErr) {
+          console.error('Error saving permissions:', permErr);
+          // No bloqueamos el éxito del rol por error en permisos
+        }
+
         onSuccess();
         onClose();
       } else {
@@ -220,6 +312,155 @@ export default function RoleModal({ isOpen, onClose, onSuccess, role, mode }: Ro
             <p className="text-xs text-gray-500 mt-2">
               El color se usa para identificar visualmente el rol en la interfaz
             </p>
+          </div>
+
+          {/* Permisos */}
+          <div className="border-t border-gray-200 pt-5">
+            <div className="flex items-center justify-between mb-3">
+              <label className="block text-sm font-medium text-gray-700">
+                Permisos del Rol
+              </label>
+              <button
+                type="button"
+                onClick={() => setShowPermissions(!showPermissions)}
+                className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+              >
+                {showPermissions ? 'Ocultar' : 'Mostrar'} ({selectedPermissions.length} seleccionados)
+              </button>
+            </div>
+
+            {showPermissions && (
+              <div className="bg-gray-50 rounded-lg p-4 max-h-96 overflow-y-auto space-y-4">
+                {loadingPermissions ? (
+                  <div className="text-center py-4 text-gray-500">
+                    Cargando permisos...
+                  </div>
+                ) : permissionsGrouped ? (
+                  <>
+                    {/* System Permissions */}
+                    {permissionsGrouped.system && permissionsGrouped.system.length > 0 && (
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="text-sm font-semibold text-gray-900">🔧 Sistema</h4>
+                          <button
+                            type="button"
+                            onClick={() => toggleCategoryPermissions('system')}
+                            className="text-xs text-blue-600 hover:text-blue-700"
+                          >
+                            {permissionsGrouped.system.every(p => selectedPermissions.includes(p.id))
+                              ? 'Deseleccionar todos'
+                              : 'Seleccionar todos'}
+                          </button>
+                        </div>
+                        <div className="grid grid-cols-1 gap-2">
+                          {permissionsGrouped.system.map((permission) => (
+                            <label
+                              key={permission.id}
+                              className="flex items-start space-x-2 text-sm cursor-pointer hover:bg-white rounded p-2 transition-colors"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={selectedPermissions.includes(permission.id)}
+                                onChange={() => togglePermission(permission.id)}
+                                className="mt-0.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                              />
+                              <div className="flex-1">
+                                <div className="font-medium text-gray-900">{permission.display_name}</div>
+                                {permission.description && (
+                                  <div className="text-xs text-gray-500">{permission.description}</div>
+                                )}
+                              </div>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Clinical Permissions */}
+                    {permissionsGrouped.clinical && permissionsGrouped.clinical.length > 0 && (
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="text-sm font-semibold text-gray-900">⚕️ Clínico</h4>
+                          <button
+                            type="button"
+                            onClick={() => toggleCategoryPermissions('clinical')}
+                            className="text-xs text-blue-600 hover:text-blue-700"
+                          >
+                            {permissionsGrouped.clinical.every(p => selectedPermissions.includes(p.id))
+                              ? 'Deseleccionar todos'
+                              : 'Seleccionar todos'}
+                          </button>
+                        </div>
+                        <div className="grid grid-cols-1 gap-2">
+                          {permissionsGrouped.clinical.map((permission) => (
+                            <label
+                              key={permission.id}
+                              className="flex items-start space-x-2 text-sm cursor-pointer hover:bg-white rounded p-2 transition-colors"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={selectedPermissions.includes(permission.id)}
+                                onChange={() => togglePermission(permission.id)}
+                                className="mt-0.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                              />
+                              <div className="flex-1">
+                                <div className="font-medium text-gray-900">{permission.display_name}</div>
+                                {permission.description && (
+                                  <div className="text-xs text-gray-500">{permission.description}</div>
+                                )}
+                              </div>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Administrative Permissions */}
+                    {permissionsGrouped.administrative && permissionsGrouped.administrative.length > 0 && (
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="text-sm font-semibold text-gray-900">📊 Administrativo</h4>
+                          <button
+                            type="button"
+                            onClick={() => toggleCategoryPermissions('administrative')}
+                            className="text-xs text-blue-600 hover:text-blue-700"
+                          >
+                            {permissionsGrouped.administrative.every(p => selectedPermissions.includes(p.id))
+                              ? 'Deseleccionar todos'
+                              : 'Seleccionar todos'}
+                          </button>
+                        </div>
+                        <div className="grid grid-cols-1 gap-2">
+                          {permissionsGrouped.administrative.map((permission) => (
+                            <label
+                              key={permission.id}
+                              className="flex items-start space-x-2 text-sm cursor-pointer hover:bg-white rounded p-2 transition-colors"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={selectedPermissions.includes(permission.id)}
+                                onChange={() => togglePermission(permission.id)}
+                                className="mt-0.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                              />
+                              <div className="flex-1">
+                                <div className="font-medium text-gray-900">{permission.display_name}</div>
+                                {permission.description && (
+                                  <div className="text-xs text-gray-500">{permission.description}</div>
+                                )}
+                              </div>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="text-center py-4 text-gray-500">
+                    No se pudieron cargar los permisos
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Preview */}
