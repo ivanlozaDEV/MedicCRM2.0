@@ -3,6 +3,9 @@
  * Centralized exports for all API services
  */
 
+export { authService } from './authService';
+export type { LoginData, SignupData, AuthResponse, CurrentUserResponse } from './authService';
+
 export { organizationService } from './organizationService';
 export type { Organization, OrganizationStats } from './organizationService';
 

@@ -1,11 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function SignupPage() {
   const router = useRouter();
+  const { signup, isAuthenticated, isLoading: authLoading } = useAuth();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -17,6 +19,13 @@ export default function SignupPage() {
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Redirigir si ya está autenticado
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      router.push('/dashboard');
+    }
+  }, [isAuthenticated, authLoading, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,21 +50,37 @@ export default function SignupPage() {
     setIsLoading(true);
 
     try {
-      // TODO: Implementar llamada al backend para registro
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
-      
-      // Simulación temporal
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Por ahora redirigir al dashboard (temporal)
-      router.push('/dashboard');
-      
-    } catch (err) {
-      setError('Error al crear la cuenta. Por favor intenta de nuevo.');
+      await signup({
+        email: formData.email,
+        password: formData.password,
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        organization_name: formData.organizationName,
+      });
+      // La redirección al dashboard se maneja en el contexto
+    } catch (err: any) {
+      setError(err.message || 'Error al crear la cuenta. Por favor intenta de nuevo.');
     } finally {
       setIsLoading(false);
     }
   };
+
+  // Mostrar loading mientras verifica auth
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          <p className="mt-4 text-gray-600">Cargando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // No renderizar si ya está autenticado (mientras redirige)
+  if (isAuthenticated) {
+    return null;
+  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({

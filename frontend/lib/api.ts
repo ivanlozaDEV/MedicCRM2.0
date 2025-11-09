@@ -6,7 +6,7 @@ export async function apiRequest(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<any> {
-  const token = localStorage.getItem('access_token');
+  const token = localStorage.getItem('auth_token');
   
   const defaultHeaders: HeadersInit = {
     'Content-Type': 'application/json',
@@ -29,7 +29,9 @@ export async function apiRequest(
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.error || 'API request failed');
+      // Log the full error for debugging
+      console.error('API Error Response:', data);
+      throw new Error(data.message || data.error || 'API request failed');
     }
 
     return data;

@@ -6,6 +6,7 @@ Contains all blueprint routes organized by resource.
 from flask import Blueprint
 
 # Import all route blueprints
+from routes.auth import auth_bp
 from routes.organizations import organizations_bp
 from routes.users import users_bp
 from routes.subscriptions import subscriptions_bp
@@ -16,6 +17,7 @@ from routes.role_permissions import role_permissions_bp
 from routes.user_specialties import user_specialties_bp
 
 __all__ = [
+    'auth_bp',
     'organizations_bp',
     'users_bp',
     'subscriptions_bp',

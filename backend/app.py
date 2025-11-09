@@ -8,6 +8,7 @@ from datetime import datetime
 
 # Import route blueprints
 from routes import (
+    auth_bp,
     organizations_bp,
     users_bp,
     subscriptions_bp,
@@ -22,11 +23,22 @@ app = Flask(__name__)
 app.config.from_object(Config)
 
 # Initialize extensions
-CORS(app, origins=app.config['CORS_ORIGINS'])
+CORS(app, 
+     origins=app.config['CORS_ORIGINS'],
+     supports_credentials=True,
+     allow_headers=['Content-Type', 'Authorization'],
+     methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'])
 jwt = JWTManager(app)
 db.init_app(app)
 
 # Register blueprints
+from routes import (
+    auth_bp, organizations_bp, users_bp, subscriptions_bp,
+    roles_bp, permissions_bp, specialties_bp,
+    role_permissions_bp, user_specialties_bp
+)
+
+app.register_blueprint(auth_bp)
 app.register_blueprint(organizations_bp)
 app.register_blueprint(users_bp)
 app.register_blueprint(subscriptions_bp)
@@ -41,6 +53,7 @@ with app.app_context():
     db.create_all()
     print("Database tables created successfully!")
     print("\n📍 Registered API Routes:")
+    print("  - /api/auth")
     print("  - /api/organizations")
     print("  - /api/users")
     print("  - /api/subscriptions")
