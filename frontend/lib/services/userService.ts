@@ -22,6 +22,7 @@ export interface User {
     specialties?: any[];
     primary_specialty?: any;
   };
+  roles?: any[]; // Array of roles assigned to the user
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -38,6 +39,7 @@ export interface CreateUserData {
   photo_url?: string;
   medical_license?: string;
   professional_id?: string;
+  role_ids?: number[]; // Array of role IDs to assign to the user
 }
 
 export const userService = {
@@ -49,12 +51,14 @@ export const userService = {
     active_only?: boolean;
     medical_only?: boolean;
     include_specialties?: boolean;
+    include_roles?: boolean;
   }): Promise<{ success: boolean; data: User[]; count: number }> => {
     const searchParams = new URLSearchParams();
     if (params?.organization_id) searchParams.append('organization_id', params.organization_id.toString());
     if (params?.active_only) searchParams.append('active_only', 'true');
     if (params?.medical_only) searchParams.append('medical_only', 'true');
     if (params?.include_specialties) searchParams.append('include_specialties', 'true');
+    if (params?.include_roles) searchParams.append('include_roles', 'true');
     
     const query = searchParams.toString() ? `?${searchParams.toString()}` : '';
     return apiRequest(`/users${query}`, {

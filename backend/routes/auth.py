@@ -10,6 +10,9 @@ from models import db
 from models.user import User
 from models.organization import Organization
 from models.role import Role
+from models.user_role import UserRole
+from models.role_permission import RolePermission
+from models.permission import Permission
 from datetime import datetime
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/api/auth')
@@ -96,8 +99,14 @@ def signup():
             db.session.add(admin_role)
             db.session.flush()
         
-        # Assign admin role to user (we'll implement this later when we add user_roles table)
-        # For now, the user is created successfully
+        # Assign admin role to user
+        user_role = UserRole(
+            user_id=user.id,
+            role_id=admin_role.id,
+            is_primary=True,
+            assigned_by=user.id
+        )
+        db.session.add(user_role)
         
         db.session.commit()
         
@@ -206,11 +215,26 @@ def get_current_user():
         # Get organization
         organization = Organization.query.get(user.organization_id)
         
-        # Get user's roles (placeholder until we implement user_roles table)
+        # Get user's roles from user_roles table
+        user_role_records = UserRole.query.filter_by(user_id=user.id).all()
         roles = []
+        for ur in user_role_records:
+            if ur.role:
+                role_dict = ur.role.to_dict()
+                role_dict['is_primary'] = ur.is_primary
+                role_dict['assigned_at'] = ur.assigned_at.isoformat() if ur.assigned_at else None
+                roles.append(role_dict)
         
-        # Get user's permissions (placeholder)
+        # Get user's permissions from their roles
         permissions = []
+        permission_ids = set()  # To avoid duplicates
+        
+        for ur in user_role_records:
+            role_permissions = RolePermission.query.filter_by(role_id=ur.role_id).all()
+            for rp in role_permissions:
+                if rp.permission and rp.permission_id not in permission_ids:
+                    permissions.append(rp.permission.code)
+                    permission_ids.add(rp.permission_id)
         
         return jsonify({
             'success': True,

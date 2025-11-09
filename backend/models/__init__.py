@@ -11,6 +11,7 @@ from models.permission import Permission
 from models.specialty import Specialty
 from models.role_permission import RolePermission
 from models.user_specialty import UserSpecialty
+from models.user_role import UserRole
 
 __all__ = [
     'db',
@@ -21,6 +22,7 @@ __all__ = [
     'Permission',
     'Specialty',
     'RolePermission',
-    'UserSpecialty'
+    'UserSpecialty',
+    'UserRole'
 ]
 

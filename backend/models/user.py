@@ -88,13 +88,14 @@ class User(db.Model):
         from models.user_specialty import UserSpecialty
         return UserSpecialty.get_primary_specialty(self.id)
     
-    def to_dict(self, include_sensitive=False, include_specialties=False):
+    def to_dict(self, include_sensitive=False, include_specialties=False, include_roles=False):
         """
         Convert model to dictionary for JSON serialization.
         
         Args:
             include_sensitive (bool): Include sensitive data like password_hash
             include_specialties (bool): Include user's specialties
+            include_roles (bool): Include user's roles
             
         Returns:
             dict: User data as dictionary
@@ -124,6 +125,18 @@ class User(db.Model):
             data['professional_info']['specialties'] = [s.to_dict() for s in specialties]
             primary = self.primary_specialty
             data['professional_info']['primary_specialty'] = primary.to_dict() if primary else None
+        
+        if include_roles:
+            from models.user_role import UserRole
+            user_role_records = UserRole.query.filter_by(user_id=self.id).all()
+            roles = []
+            for ur in user_role_records:
+                if ur.role:
+                    role_dict = ur.role.to_dict()
+                    role_dict['is_primary'] = ur.is_primary
+                    role_dict['assigned_at'] = ur.assigned_at.isoformat() if ur.assigned_at else None
+                    roles.append(role_dict)
+            data['roles'] = roles
         
         if include_sensitive:
             data['password_hash'] = self.password_hash

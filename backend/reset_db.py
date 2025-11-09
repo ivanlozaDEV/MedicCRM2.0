@@ -20,6 +20,7 @@ from models.permission import Permission
 from models.role_permission import RolePermission
 from models.specialty import Specialty
 from models.user_specialty import UserSpecialty
+from models.user_role import UserRole
 
 def reset_database():
     """
@@ -67,6 +68,7 @@ def reset_database():
         print("  - role_permissions")
         print("  - specialties")
         print("  - user_specialties")
+        print("  - user_roles")
         print("\n✨ Database is now clean and ready to use!")
         print("=" * 60)
 

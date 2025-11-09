@@ -3,7 +3,7 @@ User routes for DoctorCRM API.
 Handles CRUD operations for users and authentication.
 """
 from flask import Blueprint, request, jsonify
-from models import db, User
+from models import db, User, UserRole
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 
@@ -14,13 +14,14 @@ users_bp = Blueprint('users', __name__, url_prefix='/api/users')
 def get_all_users():
     """
     Get all users.
-    Query params: organization_id, active_only, medical_only
+    Query params: organization_id, active_only, medical_only, include_specialties, include_roles
     """
     try:
         organization_id = request.args.get('organization_id', type=int)
         active_only = request.args.get('active_only', 'false').lower() == 'true'
         medical_only = request.args.get('medical_only', 'false').lower() == 'true'
         include_specialties = request.args.get('include_specialties', 'false').lower() == 'true'
+        include_roles = request.args.get('include_roles', 'false').lower() == 'true'
         
         query = User.query
         
@@ -38,7 +39,7 @@ def get_all_users():
         
         return jsonify({
             'success': True,
-            'data': [user.to_dict(include_specialties=include_specialties) for user in users],
+            'data': [user.to_dict(include_specialties=include_specialties, include_roles=include_roles) for user in users],
             'count': len(users)
         }), 200
     
@@ -115,7 +116,24 @@ def create_user():
         
         # Extract password and create user
         password = data.pop('password')
+        
+        # Extract role_ids if provided
+        role_ids = data.pop('role_ids', [])
+        
+        # Create user
         user = User.create(password=password, **data)
+        
+        # Assign roles if provided
+        if role_ids:
+            for idx, role_id in enumerate(role_ids):
+                user_role = UserRole(
+                    user_id=user.id,
+                    role_id=role_id,
+                    is_primary=(idx == 0),  # First role is primary
+                    assigned_by=data.get('created_by')  # Could come from JWT in future
+                )
+                db.session.add(user_role)
+            db.session.commit()
         
         return jsonify({
             'success': True,
@@ -154,6 +172,23 @@ def update_user(user_id):
         if 'password' in data:
             password = data.pop('password')
             user.set_password(password)
+        
+        # Handle role_ids separately if provided
+        if 'role_ids' in data:
+            role_ids = data.pop('role_ids')
+            
+            # Remove existing roles
+            UserRole.query.filter_by(user_id=user_id).delete()
+            
+            # Assign new roles
+            for idx, role_id in enumerate(role_ids):
+                user_role = UserRole(
+                    user_id=user.id,
+                    role_id=role_id,
+                    is_primary=(idx == 0),  # First role is primary
+                    assigned_by=data.get('updated_by')  # Could come from JWT in future
+                )
+                db.session.add(user_role)
         
         user.update(**data)
         

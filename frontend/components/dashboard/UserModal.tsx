@@ -3,7 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { userService } from '@/lib/services/userService';
+import { roleService } from '@/lib/services/roleService';
 import type { User } from '@/lib/services/userService';
+import type { Role } from '@/lib/services/roleService';
 
 interface UserModalProps {
   isOpen: boolean;
@@ -17,6 +19,8 @@ export default function UserModal({ isOpen, onClose, onSuccess, user, mode }: Us
   const { organization } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [availableRoles, setAvailableRoles] = useState<Role[]>([]);
+  const [selectedRoleIds, setSelectedRoleIds] = useState<number[]>([]);
   
   const [formData, setFormData] = useState({
     first_name: '',
@@ -38,6 +42,13 @@ export default function UserModal({ isOpen, onClose, onSuccess, user, mode }: Us
         password: '', // No mostramos la contraseña actual
         is_active: user.is_active ?? true,
       });
+      
+      // Cargar roles del usuario
+      if (user.roles && user.roles.length > 0) {
+        setSelectedRoleIds(user.roles.map((r: any) => r.id));
+      } else {
+        setSelectedRoleIds([]);
+      }
     } else if (mode === 'create') {
       // Reset form para modo crear
       setFormData({
@@ -48,9 +59,30 @@ export default function UserModal({ isOpen, onClose, onSuccess, user, mode }: Us
         password: '',
         is_active: true,
       });
+      setSelectedRoleIds([]);
     }
     setError('');
   }, [mode, user, isOpen]);
+
+  // Cargar roles disponibles de la organización
+  useEffect(() => {
+    const loadRoles = async () => {
+      if (!organization) return;
+      
+      try {
+        const response = await roleService.getAll(organization.id);
+        if (response.success) {
+          setAvailableRoles(response.data);
+        }
+      } catch (error) {
+        console.error('Error loading roles:', error);
+      }
+    };
+
+    if (isOpen && organization) {
+      loadRoles();
+    }
+  }, [isOpen, organization]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -58,6 +90,16 @@ export default function UserModal({ isOpen, onClose, onSuccess, user, mode }: Us
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
+  };
+
+  const handleRoleToggle = (roleId: number) => {
+    setSelectedRoleIds(prev => {
+      if (prev.includes(roleId)) {
+        return prev.filter(id => id !== roleId);
+      } else {
+        return [...prev, roleId];
+      }
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -95,6 +137,7 @@ export default function UserModal({ isOpen, onClose, onSuccess, user, mode }: Us
         email: formData.email,
         username: formData.username || formData.email.split('@')[0],
         is_active: formData.is_active,
+        role_ids: selectedRoleIds, // Incluir los roles seleccionados
       };
 
       // Solo incluir password si estamos creando o si se proporcionó una nueva
@@ -237,6 +280,54 @@ export default function UserModal({ isOpen, onClose, onSuccess, user, mode }: Us
                 )}
               </div>
             </div>
+          </div>
+
+          {/* Roles */}
+          <div>
+            <h3 className="text-sm font-semibold text-gray-900 mb-3">Roles y Permisos</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Selecciona uno o más roles para este usuario. Los roles determinan los permisos y accesos del usuario.
+            </p>
+            
+            {availableRoles.length === 0 ? (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <p className="text-sm text-yellow-800">
+                  No hay roles disponibles en esta organización. Por favor, crea roles primero.
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {availableRoles.map((role) => (
+                  <label
+                    key={role.id}
+                    className={`flex items-center space-x-3 p-3 border-2 rounded-lg cursor-pointer transition-all ${
+                      selectedRoleIds.includes(role.id)
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedRoleIds.includes(role.id)}
+                      onChange={() => handleRoleToggle(role.id)}
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-2">
+                        <div
+                          className="w-3 h-3 rounded-full"
+                          style={{ backgroundColor: role.color }}
+                        />
+                        <span className="text-sm font-medium text-gray-900">{role.name}</span>
+                      </div>
+                      {role.description && (
+                        <p className="text-xs text-gray-500 mt-0.5">{role.description}</p>
+                      )}
+                    </div>
+                  </label>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Estado */}
