@@ -8,6 +8,9 @@ from models.user import User
 from models.subscription import Subscription
 from models.role import Role
 from models.permission import Permission
+from models.specialty import Specialty
+from models.role_permission import RolePermission
+from models.user_specialty import UserSpecialty
 
 def create_all_tables():
     """Create all tables in the database"""
@@ -24,6 +27,9 @@ def create_all_tables():
         print("  - subscriptions")
         print("  - roles")
         print("  - permissions")
+        print("  - specialties")
+        print("  - role_permissions (many-to-many)")
+        print("  - user_specialties (many-to-many)")
         
         # Verify tables exist
         inspector = db.inspect(db.engine)
@@ -33,10 +39,11 @@ def create_all_tables():
         for table in tables:
             print(f"   ✓ {table}")
         
-        # Create default permissions
-        print("\n🔐 Creating default permissions...")
-        permissions = Permission.create_default_permissions()
-        print(f"✅ Created {len(permissions)} permissions")
+        # Create default specialties
+        print("\n🏥 Creating default specialties...")
+        specialties = Specialty.create_default_specialties()
+        print(f"✅ Created {len(specialties)} specialties")
 
 if __name__ == '__main__':
     create_all_tables()
+

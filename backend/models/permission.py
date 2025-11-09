@@ -5,7 +5,8 @@ from models import db
 class Permission(db.Model):
     """
     Permission model for defining system-wide permissions.
-    Permissions are assigned to roles to control access to different modules.
+    Permissions are assigned to roles via RolePermission to control access to different modules.
+    Permissions are managed by administrators and can be dynamically created.
     """
     __tablename__ = 'permissions'
     
@@ -28,55 +29,6 @@ class Permission(db.Model):
     CATEGORY_SYSTEM = 'system'
     
     CATEGORIES = [CATEGORY_CLINICAL, CATEGORY_ADMINISTRATIVE, CATEGORY_SYSTEM]
-    
-    # Permission module constants
-    # Clinical Permissions
-    PERM_PATIENTS_VIEW = 'patients.view'
-    PERM_PATIENTS_CREATE = 'patients.create'
-    PERM_PATIENTS_EDIT = 'patients.edit'
-    PERM_PATIENTS_DELETE = 'patients.delete'
-    
-    PERM_APPOINTMENTS_VIEW = 'appointments.view'
-    PERM_APPOINTMENTS_CREATE = 'appointments.create'
-    PERM_APPOINTMENTS_EDIT = 'appointments.edit'
-    PERM_APPOINTMENTS_DELETE = 'appointments.delete'
-    
-    PERM_MEDICAL_RECORDS_VIEW = 'medical_records.view'
-    PERM_MEDICAL_RECORDS_CREATE = 'medical_records.create'
-    PERM_MEDICAL_RECORDS_EDIT = 'medical_records.edit'
-    PERM_MEDICAL_RECORDS_DELETE = 'medical_records.delete'
-    
-    PERM_PRESCRIPTIONS_VIEW = 'prescriptions.view'
-    PERM_PRESCRIPTIONS_CREATE = 'prescriptions.create'
-    PERM_PRESCRIPTIONS_EDIT = 'prescriptions.edit'
-    
-    # Administrative Permissions
-    PERM_BILLING_VIEW = 'billing.view'
-    PERM_BILLING_CREATE = 'billing.create'
-    PERM_BILLING_EDIT = 'billing.edit'
-    PERM_BILLING_DELETE = 'billing.delete'
-    
-    PERM_PAYMENTS_VIEW = 'payments.view'
-    PERM_PAYMENTS_PROCESS = 'payments.process'
-    
-    PERM_REPORTS_VIEW = 'reports.view'
-    PERM_REPORTS_EXPORT = 'reports.export'
-    
-    # System Permissions
-    PERM_USERS_VIEW = 'users.view'
-    PERM_USERS_CREATE = 'users.create'
-    PERM_USERS_EDIT = 'users.edit'
-    PERM_USERS_DELETE = 'users.delete'
-    
-    PERM_ROLES_VIEW = 'roles.view'
-    PERM_ROLES_CREATE = 'roles.create'
-    PERM_ROLES_EDIT = 'roles.edit'
-    PERM_ROLES_DELETE = 'roles.delete'
-    
-    PERM_SETTINGS_VIEW = 'settings.view'
-    PERM_SETTINGS_EDIT = 'settings.edit'
-    
-    PERM_ORGANIZATION_EDIT = 'organization.edit'
     
     def __repr__(self):
         return f'<Permission {self.module_key}>'
@@ -103,260 +55,60 @@ class Permission(db.Model):
         Create a new permission.
         
         Args:
-            module_key (str): Unique module key
-            display_name (str): Display name for UI
-            category (str): Permission category
+            module_key (str): Unique module identifier (e.g., 'patients.view')
+            display_name (str): Human-readable permission name
+            category (str): Permission category (clinical/administrative/system)
             description (str, optional): Permission description
             
         Returns:
             Permission: Created permission instance
         """
         if category not in cls.CATEGORIES:
-            raise ValueError(f"Invalid category: {category}. Must be one of {cls.CATEGORIES}")
+            raise ValueError(f"Category must be one of: {', '.join(cls.CATEGORIES)}")
+        
+        # Check if permission already exists
+        existing = cls.query.filter_by(module_key=module_key).first()
+        if existing:
+            return existing
         
         permission = cls(
             module_key=module_key,
             display_name=display_name,
-            category=category,
-            description=description
+            description=description,
+            category=category
         )
         db.session.add(permission)
         db.session.commit()
         return permission
     
-    @staticmethod
-    def create_default_permissions():
+    def update(self, **kwargs):
         """
-        Create all default system permissions.
-        This should be run once during initial setup.
+        Update permission attributes.
+        
+        Args:
+            **kwargs: Attributes to update
+            
+        Returns:
+            Permission: Updated permission instance
+        """
+        for key, value in kwargs.items():
+            if hasattr(self, key) and key != 'id':
+                setattr(self, key, value)
+        
+        db.session.commit()
+        return self
+    
+    def delete(self):
+        """
+        Delete permission.
+        Note: This will cascade delete all role-permission assignments.
         
         Returns:
-            list: List of created permissions
+            bool: True if deleted
         """
-        default_permissions = [
-            # Clinical Permissions
-            {
-                'module_key': Permission.PERM_PATIENTS_VIEW,
-                'display_name': 'View Patients',
-                'description': 'View patient list and details',
-                'category': Permission.CATEGORY_CLINICAL
-            },
-            {
-                'module_key': Permission.PERM_PATIENTS_CREATE,
-                'display_name': 'Create Patients',
-                'description': 'Add new patients to the system',
-                'category': Permission.CATEGORY_CLINICAL
-            },
-            {
-                'module_key': Permission.PERM_PATIENTS_EDIT,
-                'display_name': 'Edit Patients',
-                'description': 'Modify patient information',
-                'category': Permission.CATEGORY_CLINICAL
-            },
-            {
-                'module_key': Permission.PERM_PATIENTS_DELETE,
-                'display_name': 'Delete Patients',
-                'description': 'Remove patients from the system',
-                'category': Permission.CATEGORY_CLINICAL
-            },
-            {
-                'module_key': Permission.PERM_APPOINTMENTS_VIEW,
-                'display_name': 'View Appointments',
-                'description': 'View appointment calendar and details',
-                'category': Permission.CATEGORY_CLINICAL
-            },
-            {
-                'module_key': Permission.PERM_APPOINTMENTS_CREATE,
-                'display_name': 'Create Appointments',
-                'description': 'Schedule new appointments',
-                'category': Permission.CATEGORY_CLINICAL
-            },
-            {
-                'module_key': Permission.PERM_APPOINTMENTS_EDIT,
-                'display_name': 'Edit Appointments',
-                'description': 'Modify appointment details',
-                'category': Permission.CATEGORY_CLINICAL
-            },
-            {
-                'module_key': Permission.PERM_APPOINTMENTS_DELETE,
-                'display_name': 'Cancel Appointments',
-                'description': 'Cancel or delete appointments',
-                'category': Permission.CATEGORY_CLINICAL
-            },
-            {
-                'module_key': Permission.PERM_MEDICAL_RECORDS_VIEW,
-                'display_name': 'View Medical Records',
-                'description': 'Access patient medical history',
-                'category': Permission.CATEGORY_CLINICAL
-            },
-            {
-                'module_key': Permission.PERM_MEDICAL_RECORDS_CREATE,
-                'display_name': 'Create Medical Records',
-                'description': 'Add new medical records',
-                'category': Permission.CATEGORY_CLINICAL
-            },
-            {
-                'module_key': Permission.PERM_MEDICAL_RECORDS_EDIT,
-                'display_name': 'Edit Medical Records',
-                'description': 'Update medical records',
-                'category': Permission.CATEGORY_CLINICAL
-            },
-            {
-                'module_key': Permission.PERM_MEDICAL_RECORDS_DELETE,
-                'display_name': 'Delete Medical Records',
-                'description': 'Remove medical records',
-                'category': Permission.CATEGORY_CLINICAL
-            },
-            {
-                'module_key': Permission.PERM_PRESCRIPTIONS_VIEW,
-                'display_name': 'View Prescriptions',
-                'description': 'View patient prescriptions',
-                'category': Permission.CATEGORY_CLINICAL
-            },
-            {
-                'module_key': Permission.PERM_PRESCRIPTIONS_CREATE,
-                'display_name': 'Create Prescriptions',
-                'description': 'Issue new prescriptions',
-                'category': Permission.CATEGORY_CLINICAL
-            },
-            {
-                'module_key': Permission.PERM_PRESCRIPTIONS_EDIT,
-                'display_name': 'Edit Prescriptions',
-                'description': 'Modify prescriptions',
-                'category': Permission.CATEGORY_CLINICAL
-            },
-            
-            # Administrative Permissions
-            {
-                'module_key': Permission.PERM_BILLING_VIEW,
-                'display_name': 'View Billing',
-                'description': 'View invoices and billing information',
-                'category': Permission.CATEGORY_ADMINISTRATIVE
-            },
-            {
-                'module_key': Permission.PERM_BILLING_CREATE,
-                'display_name': 'Create Invoices',
-                'description': 'Generate new invoices',
-                'category': Permission.CATEGORY_ADMINISTRATIVE
-            },
-            {
-                'module_key': Permission.PERM_BILLING_EDIT,
-                'display_name': 'Edit Billing',
-                'description': 'Modify billing information',
-                'category': Permission.CATEGORY_ADMINISTRATIVE
-            },
-            {
-                'module_key': Permission.PERM_BILLING_DELETE,
-                'display_name': 'Delete Invoices',
-                'description': 'Remove invoices',
-                'category': Permission.CATEGORY_ADMINISTRATIVE
-            },
-            {
-                'module_key': Permission.PERM_PAYMENTS_VIEW,
-                'display_name': 'View Payments',
-                'description': 'View payment records',
-                'category': Permission.CATEGORY_ADMINISTRATIVE
-            },
-            {
-                'module_key': Permission.PERM_PAYMENTS_PROCESS,
-                'display_name': 'Process Payments',
-                'description': 'Record and process payments',
-                'category': Permission.CATEGORY_ADMINISTRATIVE
-            },
-            {
-                'module_key': Permission.PERM_REPORTS_VIEW,
-                'display_name': 'View Reports',
-                'description': 'Access system reports and analytics',
-                'category': Permission.CATEGORY_ADMINISTRATIVE
-            },
-            {
-                'module_key': Permission.PERM_REPORTS_EXPORT,
-                'display_name': 'Export Reports',
-                'description': 'Export reports to external formats',
-                'category': Permission.CATEGORY_ADMINISTRATIVE
-            },
-            
-            # System Permissions
-            {
-                'module_key': Permission.PERM_USERS_VIEW,
-                'display_name': 'View Users',
-                'description': 'View system users',
-                'category': Permission.CATEGORY_SYSTEM
-            },
-            {
-                'module_key': Permission.PERM_USERS_CREATE,
-                'display_name': 'Create Users',
-                'description': 'Add new users to the system',
-                'category': Permission.CATEGORY_SYSTEM
-            },
-            {
-                'module_key': Permission.PERM_USERS_EDIT,
-                'display_name': 'Edit Users',
-                'description': 'Modify user information',
-                'category': Permission.CATEGORY_SYSTEM
-            },
-            {
-                'module_key': Permission.PERM_USERS_DELETE,
-                'display_name': 'Delete Users',
-                'description': 'Remove users from the system',
-                'category': Permission.CATEGORY_SYSTEM
-            },
-            {
-                'module_key': Permission.PERM_ROLES_VIEW,
-                'display_name': 'View Roles',
-                'description': 'View role definitions',
-                'category': Permission.CATEGORY_SYSTEM
-            },
-            {
-                'module_key': Permission.PERM_ROLES_CREATE,
-                'display_name': 'Create Roles',
-                'description': 'Create new roles',
-                'category': Permission.CATEGORY_SYSTEM
-            },
-            {
-                'module_key': Permission.PERM_ROLES_EDIT,
-                'display_name': 'Edit Roles',
-                'description': 'Modify role permissions',
-                'category': Permission.CATEGORY_SYSTEM
-            },
-            {
-                'module_key': Permission.PERM_ROLES_DELETE,
-                'display_name': 'Delete Roles',
-                'description': 'Remove custom roles',
-                'category': Permission.CATEGORY_SYSTEM
-            },
-            {
-                'module_key': Permission.PERM_SETTINGS_VIEW,
-                'display_name': 'View Settings',
-                'description': 'View system settings',
-                'category': Permission.CATEGORY_SYSTEM
-            },
-            {
-                'module_key': Permission.PERM_SETTINGS_EDIT,
-                'display_name': 'Edit Settings',
-                'description': 'Modify system settings',
-                'category': Permission.CATEGORY_SYSTEM
-            },
-            {
-                'module_key': Permission.PERM_ORGANIZATION_EDIT,
-                'display_name': 'Edit Organization',
-                'description': 'Modify organization information',
-                'category': Permission.CATEGORY_SYSTEM
-            }
-        ]
-        
-        created_permissions = []
-        for perm_data in default_permissions:
-            # Check if permission already exists
-            existing = Permission.query.filter_by(module_key=perm_data['module_key']).first()
-            
-            if not existing:
-                permission = Permission.create(**perm_data)
-                created_permissions.append(permission)
-            else:
-                created_permissions.append(existing)
-        
-        return created_permissions
+        db.session.delete(self)
+        db.session.commit()
+        return True
     
     @staticmethod
     def find_by_key(module_key):
@@ -364,7 +116,7 @@ class Permission(db.Model):
         Find permission by module key.
         
         Args:
-            module_key (str): Module key
+            module_key (str): Module key to search for
             
         Returns:
             Permission: Permission instance or None
@@ -377,12 +129,22 @@ class Permission(db.Model):
         Find all permissions in a category.
         
         Args:
-            category (str): Category name
+            category (str): Category to filter by
             
         Returns:
             list: List of Permission instances
         """
-        return Permission.query.filter_by(category=category).order_by(Permission.display_name).all()
+        return Permission.query.filter_by(category=category).order_by(Permission.module_key).all()
+    
+    @staticmethod
+    def get_all():
+        """
+        Get all permissions.
+        
+        Returns:
+            list: List of all Permission instances
+        """
+        return Permission.query.order_by(Permission.category, Permission.module_key).all()
     
     @staticmethod
     def get_all_grouped():
@@ -392,7 +154,7 @@ class Permission(db.Model):
         Returns:
             dict: Dictionary with categories as keys and permission lists as values
         """
-        permissions = Permission.query.order_by(Permission.category, Permission.display_name).all()
+        permissions = Permission.query.order_by(Permission.category, Permission.module_key).all()
         
         grouped = {
             Permission.CATEGORY_CLINICAL: [],

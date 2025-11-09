@@ -34,8 +34,7 @@ class User(db.Model):
     # Professional Information (for medical staff)
     medical_license = db.Column(db.String(100))  # License number
     professional_id = db.Column(db.String(100))  # Professional ID (e.g., Cedula Profesional)
-    specialties = db.Column(db.Text)  # JSON array of specialties
-    # Example: '["Cardiology", "Internal Medicine"]'
+    # Note: Specialties are now managed via UserSpecialty relationship table
     
     # Password Reset
     reset_token = db.Column(db.String(100))
@@ -58,23 +57,6 @@ class User(db.Model):
         return f"{self.first_name} {self.last_name}"
     
     @property
-    def specialties_list(self):
-        """
-        Returns specialties as a Python list.
-        
-        Returns:
-            list: List of specialty strings
-        """
-        if not self.specialties:
-            return []
-        
-        import json
-        try:
-            return json.loads(self.specialties)
-        except (json.JSONDecodeError, TypeError):
-            return []
-    
-    @property
     def is_medical_professional(self):
         """
         Check if user has medical credentials.
@@ -84,12 +66,35 @@ class User(db.Model):
         """
         return bool(self.medical_license or self.professional_id)
     
-    def to_dict(self, include_sensitive=False):
+    @property
+    def specialties_list(self):
+        """
+        Get user's specialties via UserSpecialty relationship.
+        
+        Returns:
+            list: List of Specialty instances
+        """
+        from models.user_specialty import UserSpecialty
+        return UserSpecialty.get_user_specialties(self.id)
+    
+    @property
+    def primary_specialty(self):
+        """
+        Get user's primary specialty.
+        
+        Returns:
+            Specialty: Primary specialty or None
+        """
+        from models.user_specialty import UserSpecialty
+        return UserSpecialty.get_primary_specialty(self.id)
+    
+    def to_dict(self, include_sensitive=False, include_specialties=False):
         """
         Convert model to dictionary for JSON serialization.
         
         Args:
             include_sensitive (bool): Include sensitive data like password_hash
+            include_specialties (bool): Include user's specialties
             
         Returns:
             dict: User data as dictionary
@@ -107,7 +112,6 @@ class User(db.Model):
             'professional_info': {
                 'medical_license': self.medical_license,
                 'professional_id': self.professional_id,
-                'specialties': self.specialties_list,
                 'is_medical_professional': self.is_medical_professional
             },
             'is_active': self.is_active,
@@ -115,54 +119,18 @@ class User(db.Model):
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }
         
+        if include_specialties:
+            specialties = self.specialties_list
+            data['professional_info']['specialties'] = [s.to_dict() for s in specialties]
+            primary = self.primary_specialty
+            data['professional_info']['primary_specialty'] = primary.to_dict() if primary else None
+        
         if include_sensitive:
             data['password_hash'] = self.password_hash
             data['reset_token'] = self.reset_token
             data['reset_token_expires'] = self.reset_token_expires.isoformat() if self.reset_token_expires else None
         
         return data
-    
-    def set_specialties(self, specialties_list):
-        """
-        Set user specialties from a list.
-        
-        Args:
-            specialties_list (list): List of specialty strings
-        """
-        import json
-        
-        if not isinstance(specialties_list, list):
-            raise ValueError("Specialties must be a list")
-        
-        self.specialties = json.dumps(specialties_list)
-        self.updated_at = datetime.utcnow()
-        db.session.commit()
-    
-    def add_specialty(self, specialty):
-        """
-        Add a specialty to the user.
-        
-        Args:
-            specialty (str): Specialty name to add
-        """
-        current_specialties = self.specialties_list
-        
-        if specialty not in current_specialties:
-            current_specialties.append(specialty)
-            self.set_specialties(current_specialties)
-    
-    def remove_specialty(self, specialty):
-        """
-        Remove a specialty from the user.
-        
-        Args:
-            specialty (str): Specialty name to remove
-        """
-        current_specialties = self.specialties_list
-        
-        if specialty in current_specialties:
-            current_specialties.remove(specialty)
-            self.set_specialties(current_specialties)
     
     @classmethod
     def create(cls, password, **kwargs):
