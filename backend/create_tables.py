@@ -6,6 +6,7 @@ from app import app, db
 from models.organization import Organization
 from models.user import User
 from models.subscription import Subscription
+from models.role import Role
 
 def create_all_tables():
     """Create all tables in the database"""
@@ -20,6 +21,7 @@ def create_all_tables():
         print("  - organizations")
         print("  - users")
         print("  - subscriptions")
+        print("  - roles")
         
         # Verify tables exist
         inspector = db.inspect(db.engine)

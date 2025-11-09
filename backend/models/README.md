@@ -12,6 +12,7 @@ models/
 ├── organization.py          # Organizations/Clinics model
 ├── user.py                  # System users model
 ├── subscription.py          # Subscription and billing model
+├── role.py                  # Roles and permissions model
 └── (more models coming)
 ```
 
@@ -104,11 +105,45 @@ Integrates with LemonSqueezy for payment processing.
 - Premium: 10 users, 1000 patients
 - Enterprise: 999 users, 999999 patients
 
+### 4. Role (roles)
+Manages user roles and access control within organizations.
+Supports both system-defined and custom roles.
+
+**Main fields:**
+- `organization_id`: Reference to organization
+- `name`: Role name (unique per organization)
+- `description`: Role purpose description
+- `color`: Badge color for UI (#hex format)
+- `is_system`: System role (cannot be deleted/renamed)
+- `created_by`: User who created the role
+
+**Methods:**
+- `to_dict(include_users)`: Convert to JSON
+- `create(org_id, name)`: Create new role
+- `update()`: Update role (prevents renaming system roles)
+- `delete()`: Delete role (prevents deleting system roles)
+- `create_system_roles(org_id)`: Create default roles
+- `find_by_name(org_id, name)`: Find by name
+- `find_by_organization(org_id)`: Get all org roles
+- `get_admin_role(org_id)`: Get admin role
+- `validate_role_name()`: Check name uniqueness
+
+**Properties:**
+- `is_admin`: Check if admin role
+- `user_count`: Count of users with role
+
+**System Roles:**
+- Admin (Red #DC2626): Full system access
+- Doctor (Blue #2563EB): Patient care access
+- Nurse (Green #059669): Patient support access
+- Receptionist (Purple #7C3AED): Scheduling access
+- Accountant (Orange #EA580C): Billing access
+
 ## Usage
 
 ### Import models:
 ```python
-from models import db, Organization, User, Subscription
+from models import db, Organization, User, Subscription, Role
 ```
 
 ### Create organization with subscription:
@@ -126,6 +161,46 @@ subscription = Subscription.create(
     plan_name='free',
     status='trial'
 )
+
+# Create system roles for organization
+roles = Role.create_system_roles(org.id)
+print(f"Created {len(roles)} system roles")
+```
+
+### Role management:
+```python
+# Get admin role
+admin_role = Role.get_admin_role(org_id=1)
+
+# Create custom role
+custom_role = Role.create(
+    organization_id=1,
+    name="Lab Technician",
+    description="Laboratory staff with test result access",
+    color="#10B981",
+    is_system=False,
+    created_by=admin_user.id
+)
+
+# Update role
+custom_role.update(
+    description="Updated description",
+    color="#14B8A6"
+)
+
+# Get all roles
+all_roles = Role.find_by_organization(org_id=1)
+system_roles = Role.find_by_organization(org_id=1, system_only=True)
+custom_roles = Role.find_by_organization(org_id=1, custom_only=True)
+
+# Validate role name
+is_valid = Role.validate_role_name(org_id=1, name="New Role")
+
+# Delete custom role (system roles cannot be deleted)
+try:
+    custom_role.delete()
+except ValueError as e:
+    print(f"Error: {e}")
 ```
 
 ### Subscription management:

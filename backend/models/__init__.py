@@ -6,5 +6,6 @@ db = SQLAlchemy()
 from models.organization import Organization
 from models.user import User
 from models.subscription import Subscription
+from models.role import Role
 
-__all__ = ['db', 'Organization', 'User', 'Subscription']
+__all__ = ['db', 'Organization', 'User', 'Subscription', 'Role']
