@@ -1,99 +1,151 @@
 # Models Documentation
 
-Este directorio contiene todos los modelos de la base de datos organizados de manera modular.
+This directory contains all database models organized in a modular way.
 
-## Estructura
+## Structure
 
-Cada tabla de la base de datos está en su propio archivo para mejor organización y mantenibilidad.
+Each database table is in its own file for better organization and maintainability.
 
 ```
 models/
-├── __init__.py              # Inicialización de SQLAlchemy y exportaciones
-├── organization.py          # Modelo de Organizaciones/Clínicas
-└── (más modelos por venir)
+├── __init__.py              # SQLAlchemy initialization and exports
+├── organization.py          # Organizations/Clinics model
+├── user.py                  # System users model
+└── (more models coming)
 ```
 
-## Modelos Actuales
+## Current Models
 
 ### 1. Organization (organizations)
-Representa las organizaciones o clínicas que usan el sistema.
+Represents organizations or clinics using the system.
 
-**Campos principales:**
-- `name`: Nombre de la organización
-- `legal_name`: Nombre legal
-- `tax_id`: RUC o identificación fiscal
-- `email`, `phone`, `website`: Información de contacto
-- Dirección completa (address_line1, city, state, etc.)
-- Configuración (timezone, currency)
+**Main fields:**
+- `name`: Organization name
+- `legal_name`: Legal name
+- `tax_id`: Tax ID or RUC
+- `email`, `phone`, `website`: Contact information
+- Complete address (address_line1, city, state, etc.)
+- Configuration (timezone, currency)
 - Branding (logo_url, primary_color)
 
-**Métodos:**
-- `to_dict()`: Convierte a diccionario JSON
-- `create()`: Crea una nueva organización
-- `update()`: Actualiza datos
-- `delete()`: Soft delete (marca como inactiva)
-- `hard_delete()`: Elimina permanentemente
+**Methods:**
+- `to_dict()`: Convert to JSON dictionary
+- `create()`: Create new organization
+- `update()`: Update data
+- `delete()`: Soft delete (mark as inactive)
+- `hard_delete()`: Permanently delete
 
-## Uso
+### 2. User (users)
+Represents system users with authentication and profile.
 
-### Importar modelos:
+**Main fields:**
+- `organization_id`: Reference to organization
+- `username`, `email`: Unique credentials
+- `password_hash`: Hashed password
+- `first_name`, `last_name`: Personal information
+- `phone`, `photo_url`: Optional contact and profile
+- `reset_token`, `reset_token_expires`: Password recovery
+
+**Methods:**
+- `to_dict(include_sensitive=False)`: Convert to JSON
+- `create(password, **kwargs)`: Create with hashed password
+- `set_password(password)`: Update password
+- `check_password(password)`: Verify password
+- `generate_reset_token()`: Generate reset token
+- `verify_reset_token(token)`: Verify reset token
+- `clear_reset_token()`: Clear reset token
+- `find_by_email(email)`: Find user by email
+- `find_by_username(username)`: Find user by username
+- `find_by_organization(org_id)`: Get all users in org
+
+**Properties:**
+- `full_name`: Returns first_name + last_name
+
+## Usage
+
+### Import models:
 ```python
-from models import db, Organization
+from models import db, Organization, User
 ```
 
-### Crear una organización:
+### Create a user:
 ```python
-org = Organization.create(
-    name="Clínica Ejemplo",
-    email="contacto@ejemplo.com",
-    phone="+593 99 123 4567",
-    city="Quito",
-    country="Ecuador"
+# First, get or create organization
+org = Organization.query.get(1)
+
+# Create user with password
+user = User.create(
+    organization_id=org.id,
+    username="jdoe",
+    email="john.doe@example.com",
+    password="SecurePassword123!",
+    first_name="John",
+    last_name="Doe",
+    phone="+593 99 123 4567"
 )
 ```
 
-### Consultar organizaciones:
+### Authenticate user:
 ```python
-# Todas las organizaciones activas
-orgs = Organization.query.filter_by(is_active=True).all()
+# Find user
+user = User.find_by_email("john.doe@example.com")
 
-# Por ID
-org = Organization.query.get(1)
-
-# Por nombre
-org = Organization.query.filter_by(name="Clínica Ejemplo").first()
+# Verify password
+if user and user.check_password("SecurePassword123!"):
+    print(f"Welcome {user.full_name}!")
+else:
+    print("Invalid credentials")
 ```
 
-### Actualizar:
+### Password reset flow:
 ```python
-org = Organization.query.get(1)
-org.update(
+# Generate reset token
+user = User.find_by_email("john.doe@example.com")
+token = user.generate_reset_token()
+# Send token via email...
+
+# Later, verify and reset
+if user.verify_reset_token(token):
+    user.set_password("NewPassword123!")
+    user.clear_reset_token()
+```
+
+### Query users:
+```python
+# All active users in organization
+users = User.find_by_organization(org_id=1, active_only=True)
+
+# By username
+user = User.find_by_username("jdoe")
+
+# By email
+user = User.find_by_email("john.doe@example.com")
+```
+
+### Update user:
+```python
+user = User.query.get(1)
+user.update(
     phone="+593 99 999 9999",
-    website="https://ejemplo.com"
+    photo_url="https://example.com/photo.jpg"
 )
 ```
 
-### Eliminar (soft delete):
-```python
-org = Organization.query.get(1)
-org.delete()  # Marca is_active = False
-```
+## Next Models
 
-## Próximos Modelos
+The following models will be added progressively:
+- [ ] Roles (user roles and permissions)
+- [ ] Patients
+- [ ] Doctors
+- [ ] Appointments
+- [ ] Medical Records
+- [ ] Invoices
+- [ ] Payments
+- And more...
 
-Los siguientes modelos serán agregados progresivamente:
-- [ ] Users (usuarios del sistema)
-- [ ] Patients (pacientes)
-- [ ] Doctors (médicos)
-- [ ] Appointments (citas)
-- [ ] Medical Records (historias clínicas)
-- [ ] Invoices (facturas)
-- [ ] Payments (pagos)
-- Y más...
+## Migrations
 
-## Migraciones
-
-Para crear las tablas en la base de datos:
+To create tables in the database:
 
 ```bash
 cd backend
@@ -101,11 +153,13 @@ source .venv/bin/activate
 python create_tables.py
 ```
 
-## Convenciones
+## Conventions
 
-1. **Nombres de archivos**: snake_case (ej: `organization.py`)
-2. **Nombres de clases**: PascalCase (ej: `Organization`)
-3. **Nombres de tablas**: plural snake_case (ej: `organizations`)
-4. **Timestamps**: Siempre incluir `created_at` y `updated_at`
-5. **Soft deletes**: Usar `is_active` para marcar registros activos/inactivos
-6. **Métodos helper**: Incluir `to_dict()`, `create()`, `update()`, `delete()`
+1. **File names**: snake_case (e.g., `user.py`)
+2. **Class names**: PascalCase (e.g., `User`)
+3. **Table names**: plural snake_case (e.g., `users`)
+4. **Timestamps**: Always include `created_at` and `updated_at`
+5. **Soft deletes**: Use `is_active` to mark active/inactive records
+6. **Helper methods**: Include `to_dict()`, `create()`, `update()`, `delete()`
+7. **Comments**: All comments and docstrings in English
+8. **Indexes**: Add indexes on foreign keys and frequently queried fields

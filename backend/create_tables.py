@@ -1,27 +1,29 @@
 """
-Script para crear las tablas de la base de datos.
-Ejecutar: python create_tables.py
+Script to create database tables.
+Run: python create_tables.py
 """
 from app import app, db
 from models.organization import Organization
+from models.user import User
 
 def create_all_tables():
-    """Crea todas las tablas en la base de datos"""
+    """Create all tables in the database"""
     with app.app_context():
-        print("🔧 Creando tablas en la base de datos...")
+        print("🔧 Creating tables in database...")
         
-        # Crear todas las tablas
+        # Create all tables
         db.create_all()
         
-        print("✅ Tablas creadas exitosamente!")
-        print("\nTablas disponibles:")
+        print("✅ Tables created successfully!")
+        print("\nAvailable tables:")
         print("  - organizations")
+        print("  - users")
         
-        # Verificar que la tabla existe
+        # Verify tables exist
         inspector = db.inspect(db.engine)
         tables = inspector.get_table_names()
         
-        print(f"\n📊 Total de tablas en la BD: {len(tables)}")
+        print(f"\n📊 Total tables in DB: {len(tables)}")
         for table in tables:
             print(f"   ✓ {table}")
 
