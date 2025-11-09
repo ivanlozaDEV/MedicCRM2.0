@@ -98,14 +98,14 @@ export default function DashboardPage() {
     return permissions.includes(permission) || permissions.includes('all');
   };
 
-  // TODO: Esto debería venir del contexto de autenticación
+  // Verificar permisos del usuario
   const userPermissions = {
-    canCreateUser: hasPermission('create_user') || hasPermission('manage_users'),
-    canCreateRole: hasPermission('create_role') || hasPermission('manage_roles'),
-    canViewTeam: hasPermission('view_users') || hasPermission('manage_users'),
-    canViewRoles: hasPermission('view_roles') || hasPermission('manage_roles'),
-    canViewPermissions: hasPermission('view_permissions') || hasPermission('manage_permissions'),
-    canViewSpecialties: hasPermission('view_specialties') || hasPermission('manage_specialties'),
+    canCreateUser: hasPermission('users.create'),
+    canCreateRole: hasPermission('roles.create'),
+    canViewTeam: hasPermission('users.view'),
+    canViewRoles: hasPermission('roles.view'),
+    canViewPermissions: hasPermission('permissions.view'),
+    canViewSpecialties: hasPermission('specialties.view'),
   };
 
   const quickActions = [

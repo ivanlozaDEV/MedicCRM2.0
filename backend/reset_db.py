@@ -68,6 +68,17 @@ def reset_database():
             traceback.print_exc()
             return
         
+        print("\n🌱 Seeding global specialties...")
+        try:
+            from seed_default_specialties import seed_default_specialties
+            seed_default_specialties()
+            print("✅ Specialties seeded successfully")
+        except Exception as e:
+            print(f"❌ Error seeding specialties: {e}")
+            import traceback
+            traceback.print_exc()
+            return
+        
         print("\n" + "=" * 60)
         print("✅ DATABASE RESET COMPLETE")
         print("=" * 60)

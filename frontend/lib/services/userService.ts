@@ -23,6 +23,7 @@ export interface User {
     primary_specialty?: any;
   };
   roles?: any[]; // Array of roles assigned to the user
+  specialties?: any[]; // Array of specialties assigned to the user
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -149,6 +150,20 @@ export const userService = {
     return apiRequest('/users/validate-email', {
       method: 'POST',
       body: JSON.stringify({ email }),
+    });
+  },
+
+  /**
+   * Update user specialties (replaces existing specialties)
+   */
+  updateSpecialties: async (userId: number, specialtyIds: number[], primarySpecialtyId?: number): Promise<{ success: boolean; message: string }> => {
+    return apiRequest('/user-specialties/replace', {
+      method: 'POST',
+      body: JSON.stringify({
+        user_id: userId,
+        specialty_ids: specialtyIds,
+        primary_specialty_id: primarySpecialtyId,
+      }),
     });
   },
 };

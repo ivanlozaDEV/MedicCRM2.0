@@ -4,8 +4,11 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { userService } from '@/lib/services/userService';
 import { roleService } from '@/lib/services/roleService';
+import { specialtyService } from '@/lib/services/specialtyService';
 import type { User } from '@/lib/services/userService';
 import type { Role } from '@/lib/services/roleService';
+import type { Specialty } from '@/lib/services/specialtyService';
+import MedicalIcon from '@/components/icons/MedicalIcon';
 
 interface UserModalProps {
   isOpen: boolean;
@@ -20,7 +23,9 @@ export default function UserModal({ isOpen, onClose, onSuccess, user, mode }: Us
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [availableRoles, setAvailableRoles] = useState<Role[]>([]);
+  const [availableSpecialties, setAvailableSpecialties] = useState<Specialty[]>([]);
   const [selectedRoleIds, setSelectedRoleIds] = useState<number[]>([]);
+  const [selectedSpecialtyIds, setSelectedSpecialtyIds] = useState<number[]>([]);
   
   const [formData, setFormData] = useState({
     first_name: '',
@@ -34,6 +39,10 @@ export default function UserModal({ isOpen, onClose, onSuccess, user, mode }: Us
   // Cargar datos del usuario si estamos editando
   useEffect(() => {
     if (mode === 'edit' && user) {
+      console.log('=== CARGANDO USUARIO PARA EDITAR ===');
+      console.log('User object:', user);
+      console.log('User professional_info:', user.professional_info);
+      
       setFormData({
         first_name: user.first_name || '',
         last_name: user.last_name || '',
@@ -49,6 +58,19 @@ export default function UserModal({ isOpen, onClose, onSuccess, user, mode }: Us
       } else {
         setSelectedRoleIds([]);
       }
+      
+      // Cargar especialidades del usuario desde professional_info
+      const userSpecialties = user.professional_info?.specialties || user.specialties || [];
+      console.log('User specialties:', userSpecialties);
+      
+      if (userSpecialties.length > 0) {
+        const specialtyIds = userSpecialties.map((s: any) => s.id);
+        console.log('Setting selected specialty IDs:', specialtyIds);
+        setSelectedSpecialtyIds(specialtyIds);
+      } else {
+        console.log('No specialties found, setting empty array');
+        setSelectedSpecialtyIds([]);
+      }
     } else if (mode === 'create') {
       // Reset form para modo crear
       setFormData({
@@ -60,6 +82,7 @@ export default function UserModal({ isOpen, onClose, onSuccess, user, mode }: Us
         is_active: true,
       });
       setSelectedRoleIds([]);
+      setSelectedSpecialtyIds([]);
     }
     setError('');
   }, [mode, user, isOpen]);
@@ -84,6 +107,24 @@ export default function UserModal({ isOpen, onClose, onSuccess, user, mode }: Us
     }
   }, [isOpen, organization]);
 
+  // Cargar especialidades disponibles (globales)
+  useEffect(() => {
+    const loadSpecialties = async () => {
+      try {
+        const response = await specialtyService.getAll({ active_only: true });
+        if (response.success) {
+          setAvailableSpecialties(response.data);
+        }
+      } catch (error) {
+        console.error('Error loading specialties:', error);
+      }
+    };
+
+    if (isOpen) {
+      loadSpecialties();
+    }
+  }, [isOpen]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
@@ -99,6 +140,17 @@ export default function UserModal({ isOpen, onClose, onSuccess, user, mode }: Us
       } else {
         return [...prev, roleId];
       }
+    });
+  };
+
+  const handleSpecialtyToggle = (specialtyId: number) => {
+    console.log('Toggling specialty:', specialtyId);
+    setSelectedSpecialtyIds(prev => {
+      const newIds = prev.includes(specialtyId)
+        ? prev.filter(id => id !== specialtyId)
+        : [...prev, specialtyId];
+      console.log('New selected specialty IDs:', newIds);
+      return newIds;
     });
   };
 
@@ -146,13 +198,31 @@ export default function UserModal({ isOpen, onClose, onSuccess, user, mode }: Us
       }
 
       let response;
+      let savedUserId: number | undefined;
+
       if (mode === 'create') {
         response = await userService.create(payload);
+        savedUserId = response?.data?.id;
       } else if (user) {
         response = await userService.update(user.id, payload);
+        savedUserId = user.id;
       }
 
-      if (response?.success) {
+      if (response?.success && savedUserId) {
+        // Siempre actualizar especialidades (incluso si el array está vacío)
+        // Esto permite quitar todas las especialidades de un usuario
+        console.log('=== GUARDANDO ESPECIALIDADES ===');
+        console.log('User ID:', savedUserId);
+        console.log('Selected Specialty IDs:', selectedSpecialtyIds);
+        
+        try {
+          const specialtyResponse = await userService.updateSpecialties(savedUserId, selectedSpecialtyIds);
+          console.log('Specialty update response:', specialtyResponse);
+        } catch (specialtyErr) {
+          console.error('Error saving specialties:', specialtyErr);
+          // No bloqueamos el éxito del usuario por error en especialidades
+        }
+
         onSuccess();
         onClose();
       } else {
@@ -327,6 +397,58 @@ export default function UserModal({ isOpen, onClose, onSuccess, user, mode }: Us
                   </label>
                 ))}
               </div>
+            )}
+          </div>
+
+          {/* Especialidades Médicas */}
+          <div>
+            <h3 className="text-sm font-semibold text-gray-900 mb-3">Especialidades Médicas</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Selecciona las especialidades que este usuario puede ejercer (opcional, solo para personal médico).
+            </p>
+            
+            {availableSpecialties.length === 0 ? (
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <p className="text-sm text-gray-600">
+                  No hay especialidades disponibles.
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 max-h-64 overflow-y-auto p-2 border border-gray-200 rounded-lg">
+                {availableSpecialties.map((specialty) => (
+                  <label
+                    key={specialty.id}
+                    className={`flex items-center space-x-2 p-2 rounded-lg cursor-pointer transition-all ${
+                      selectedSpecialtyIds.includes(specialty.id)
+                        ? 'bg-blue-50 border-2 border-blue-500'
+                        : 'hover:bg-gray-50 border-2 border-transparent'
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedSpecialtyIds.includes(specialty.id)}
+                      onChange={() => handleSpecialtyToggle(specialty.id)}
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <div
+                      className="w-8 h-8 rounded flex items-center justify-center flex-shrink-0"
+                      style={{ backgroundColor: `${specialty.default_color}15` }}
+                    >
+                      <MedicalIcon
+                        name={specialty.icon || 'heart'}
+                        className="w-4 h-4"
+                        style={{ color: specialty.default_color }}
+                      />
+                    </div>
+                    <span className="text-sm font-medium text-gray-900 truncate">{specialty.name}</span>
+                  </label>
+                ))}
+              </div>
+            )}
+            {selectedSpecialtyIds.length > 0 && (
+              <p className="text-xs text-gray-500 mt-2">
+                {selectedSpecialtyIds.length} especialidad(es) seleccionada(s)
+              </p>
             )}
           </div>
 

@@ -5,6 +5,7 @@ from models import db
 class Specialty(db.Model):
     """
     Specialty model for managing medical specialties.
+    Specialties are GLOBAL - shared across all organizations.
     Users (medical professionals) can be assigned multiple specialties via UserSpecialty.
     """
     __tablename__ = 'specialties'
@@ -19,6 +20,7 @@ class Specialty(db.Model):
     # Configuration
     default_appointment_duration = db.Column(db.Integer, default=30)  # in minutes
     default_color = db.Column(db.String(7), default='#3B82F6')  # Hex color
+    icon = db.Column(db.String(50), default='heart')  # Icon identifier for UI
     
     # Status
     is_active = db.Column(db.Boolean, nullable=False, default=True)
@@ -53,6 +55,7 @@ class Specialty(db.Model):
             'description': self.description,
             'default_appointment_duration': self.default_appointment_duration,
             'default_color': self.default_color,
+            'icon': self.icon,
             'is_active': self.is_active,
             'user_count': self.user_count,
             'created_at': self.created_at.isoformat() if self.created_at else None,

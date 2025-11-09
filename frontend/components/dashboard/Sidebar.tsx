@@ -21,15 +21,15 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
     return permissions.includes(permission) || permissions.includes('all');
   };
 
-  // TODO: Ajustar permisos según el sistema real del backend
+  // Verificar permisos del usuario
   const userPermissions = {
-    canViewDashboard: true, // Todos pueden ver el dashboard
-    canViewTeam: hasPermission('view_users') || hasPermission('manage_users'),
-    canViewRoles: hasPermission('view_roles') || hasPermission('manage_roles'),
-    canViewPermissions: hasPermission('view_permissions') || hasPermission('manage_permissions'),
-    canViewSpecialties: hasPermission('view_specialties') || hasPermission('manage_specialties'),
-    canViewOrganization: hasPermission('view_organization') || hasPermission('manage_organization'),
-    canViewSubscription: true, // Todos pueden ver su suscripción
+    canViewDashboard: hasPermission('dashboard.view'),
+    canViewTeam: hasPermission('users.view'),
+    canViewRoles: hasPermission('roles.view'),
+    canViewPermissions: hasPermission('permissions.view'),
+    canViewSpecialties: hasPermission('specialties.view'),
+    canViewOrganization: hasPermission('organizations.view'),
+    canViewSubscription: hasPermission('subscriptions.view'),
   };
 
   const navigationItems = [

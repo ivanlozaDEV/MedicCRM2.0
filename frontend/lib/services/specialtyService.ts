@@ -11,6 +11,7 @@ export interface Specialty {
   description?: string;
   default_appointment_duration: number;
   default_color: string;
+  icon?: string;
   is_active: boolean;
   user_count: number;
   created_at: string;
