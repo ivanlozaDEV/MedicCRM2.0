@@ -8,16 +8,31 @@ import { apiRequest } from '../api';
 export interface Subscription {
   id: number;
   organization_id: number;
-  plan: 'free' | 'basic' | 'premium' | 'enterprise';
-  status: 'active' | 'canceled' | 'expired' | 'trial';
-  start_date: string;
-  end_date?: string;
-  trial_end_date?: string;
-  max_users?: number;
-  max_patients?: number;
-  max_appointments_per_month?: number;
-  lemonsqueezy_subscription_id?: string;
-  lemonsqueezy_customer_id?: string;
+  plan: {
+    name: string;
+    price: number;
+    billing_cycle: string;
+  };
+  status: string;
+  is_active: boolean;
+  is_trial: boolean;
+  is_expired: boolean;
+  dates: {
+    trial_end: string | null;
+    current_period_start: string | null;
+    current_period_end: string | null;
+    canceled_at: string | null;
+    days_until_expiry: number | null;
+  };
+  lemonsqueezy: {
+    subscription_id: string | null;
+    customer_id: string | null;
+    variant_id: string | null;
+  };
+  limits: {
+    max_users: number;
+    max_patients: number;
+  };
   created_at: string;
   updated_at: string;
 }
@@ -95,6 +110,34 @@ export const subscriptionService = {
   delete: async (id: number): Promise<{ success: boolean; message: string }> => {
     return apiRequest(`/subscriptions/${id}`, {
       method: 'DELETE',
+    });
+  },
+
+  /**
+   * Create a checkout session for upgrading/activating a plan
+   */
+  createCheckout: async (params: {
+    plan_name: string;
+    billing_cycle?: 'monthly' | 'yearly';
+    organization_id: number;
+    user_id: number;
+    user_email: string;
+    organization_name?: string;
+  }): Promise<{ 
+    success: boolean; 
+    data?: { checkout_url: string; plan_name: string; billing_cycle: string }; 
+    error?: string 
+  }> => {
+    return apiRequest('/subscriptions/checkout', {
+      method: 'POST',
+      body: JSON.stringify({
+        plan_name: params.plan_name,
+        billing_cycle: params.billing_cycle || 'monthly',
+        organization_id: params.organization_id,
+        user_id: params.user_id,
+        user_email: params.user_email,
+        organization_name: params.organization_name
+      }),
     });
   },
 };

@@ -15,6 +15,7 @@ from routes.permissions import permissions_bp
 from routes.specialties import specialties_bp
 from routes.role_permissions import role_permissions_bp
 from routes.user_specialties import user_specialties_bp
+from routes.webhooks import webhooks_bp
 
 __all__ = [
     'auth_bp',
@@ -25,5 +26,6 @@ __all__ = [
     'permissions_bp',
     'specialties_bp',
     'role_permissions_bp',
-    'user_specialties_bp'
+    'user_specialties_bp',
+    'webhooks_bp'
 ]

@@ -6,11 +6,14 @@ import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { userService } from '@/lib/services/userService';
 import { roleService } from '@/lib/services/roleService';
+import { subscriptionService, Subscription } from '@/lib/services/subscriptionService';
+import { SUBSCRIPTION_PLANS, PlanName } from '@/lib/subscriptionPlans';
 import UserModal from '@/components/dashboard/UserModal';
 import RoleModal from '@/components/dashboard/RoleModal';
 
 export default function DashboardPage() {
   const { user, organization, permissions } = useAuth();
+  const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [stats, setStats] = useState({
     // Estadísticas administrativas
     userCount: 0,
@@ -41,10 +44,21 @@ export default function DashboardPage() {
       setIsLoading(true);
 
       // Cargar datos en paralelo
-      const [usersResponse, rolesResponse] = await Promise.all([
+      const [usersResponse, rolesResponse, subscriptionResponse] = await Promise.all([
         userService.getAll({ organization_id: organization.id, active_only: true, include_specialties: true }),
         roleService.getAll(organization.id),
+        subscriptionService.getAll({ organization_id: organization.id }),
       ]);
+
+      // Obtener la suscripción actual
+      let currentSubscription: Subscription | null = null;
+      let userLimit = 50; // Default fallback
+
+      if (subscriptionResponse.success && subscriptionResponse.data && subscriptionResponse.data.length > 0) {
+        currentSubscription = subscriptionResponse.data[0];
+        setSubscription(currentSubscription);
+        userLimit = currentSubscription.limits?.max_users || 50;
+      }
 
       // Contar especialidades únicas que tienen los usuarios del equipo
       const uniqueSpecialties = new Set<number>();
@@ -64,7 +78,7 @@ export default function DashboardPage() {
         userCount: usersResponse.count || 0,
         roleCount: rolesResponse.count || 0,
         specialtyCount: uniqueSpecialties.size,
-        userLimit: 50, // TODO: Obtener del plan de suscripción
+        userLimit: userLimit,
         // Clínicas (TODO: obtener del backend cuando estén disponibles las APIs)
         patientsCount: 0,
         appointmentsTodayCount: 0,
@@ -557,32 +571,104 @@ export default function DashboardPage() {
       </div>
 
       {/* Subscription Alert */}
-      <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
-        <div className="flex items-start">
-          <div className="flex-shrink-0">
-            <svg 
-              className="w-5 h-5 text-blue-600" 
-              fill="none" 
-              stroke="currentColor" 
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <div className="ml-3 flex-1">
-            <h3 className="text-sm font-medium text-gray-900">Plan Professional</h3>
-            <p className="text-sm text-gray-700 mt-1">
-              Estás usando {stats.userCount} de {stats.userLimit} usuarios disponibles. 
-              <Link 
-                href="/dashboard/subscription" 
-                className="font-medium text-blue-600 underline ml-1 hover:no-underline transition-all"
+      {subscription && (
+        <div className={`border-2 rounded-xl p-4 ${
+          // Trial expirado
+          subscription.status === 'trial' && subscription.dates?.days_until_expiry !== null && subscription.dates.days_until_expiry < 0
+            ? 'bg-red-100 border-red-300'
+          // Trial por expirar (3 días o menos)
+          : subscription.status === 'trial' && subscription.dates?.days_until_expiry !== null && subscription.dates.days_until_expiry <= 3
+            ? 'bg-red-50 border-red-200'
+          // Trial advertencia (7 días o menos)
+          : subscription.status === 'trial' && subscription.dates?.days_until_expiry !== null && subscription.dates.days_until_expiry <= 7
+            ? 'bg-yellow-50 border-yellow-200'
+          // Trial normal
+          : subscription.status === 'trial'
+            ? 'bg-blue-50 border-blue-200'
+          // Plan activo
+          : subscription.status === 'active'
+            ? 'bg-green-50 border-green-200'
+          // Otros estados
+            : 'bg-yellow-50 border-yellow-200'
+        }`}>
+          <div className="flex items-start">
+            <div className="flex-shrink-0">
+              <svg 
+                className={`w-5 h-5 ${
+                  subscription.status === 'trial' && subscription.dates?.days_until_expiry !== null && subscription.dates.days_until_expiry < 0
+                    ? 'text-red-700'
+                  : subscription.status === 'trial' && subscription.dates?.days_until_expiry !== null && subscription.dates.days_until_expiry <= 3
+                    ? 'text-red-600'
+                  : subscription.status === 'trial' && subscription.dates?.days_until_expiry !== null && subscription.dates.days_until_expiry <= 7
+                    ? 'text-yellow-600'
+                  : subscription.status === 'trial'
+                    ? 'text-blue-600'
+                  : subscription.status === 'active'
+                    ? 'text-green-600'
+                    : 'text-yellow-600'
+                }`}
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
               >
-                Mejorar plan
-              </Link>
-            </p>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div className="ml-3 flex-1">
+              {subscription.status === 'trial' && subscription.dates?.days_until_expiry !== null && subscription.dates.days_until_expiry < 0 ? (
+                // Trial expirado
+                <>
+                  <h3 className="text-sm font-semibold text-red-900">
+                    🚨 Tu período de prueba ha expirado
+                  </h3>
+                  <p className="text-sm text-red-800 mt-1">
+                    Para continuar usando DoctorCRM, activa un plan de suscripción.
+                    <Link 
+                      href="/dashboard/subscription" 
+                      className="font-semibold text-red-900 underline ml-1 hover:no-underline transition-all"
+                    >
+                      Activar ahora →
+                    </Link>
+                  </p>
+                </>
+              ) : (
+                // Trial activo o plan normal
+                <>
+                  <h3 className="text-sm font-medium text-gray-900">
+                    Plan {SUBSCRIPTION_PLANS[subscription.plan.name as PlanName]?.displayName || subscription.plan.name}
+                    {subscription.status === 'trial' && (
+                      <span className={`ml-2 text-xs px-2 py-0.5 rounded-full ${
+                        subscription.dates?.days_until_expiry !== null && subscription.dates.days_until_expiry <= 3
+                          ? 'bg-red-100 text-red-700'
+                          : subscription.dates?.days_until_expiry !== null && subscription.dates.days_until_expiry <= 7
+                          ? 'bg-yellow-100 text-yellow-700'
+                          : 'bg-blue-100 text-blue-700'
+                      }`}>
+                        {subscription.dates?.days_until_expiry !== null && subscription.dates.days_until_expiry <= 3 && '⚠️ '}
+                        Prueba - {subscription.dates?.days_until_expiry || 0} días restantes
+                      </span>
+                    )}
+                  </h3>
+                  <p className="text-sm text-gray-700 mt-1">
+                    Estás usando {stats.userCount} de {stats.userLimit} usuarios disponibles. 
+                    {stats.userCount >= stats.userLimit * 0.8 && (
+                      <span className="ml-1 text-yellow-600 font-medium">
+                        ¡Cerca del límite!
+                      </span>
+                    )}
+                    <Link 
+                      href="/dashboard/subscription" 
+                      className="font-medium text-blue-600 underline ml-1 hover:no-underline transition-all"
+                    >
+                      {subscription.status === 'trial' ? 'Activar suscripción' : 'Ver detalles'}
+                    </Link>
+                  </p>
+                </>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Modals */}
       <UserModal

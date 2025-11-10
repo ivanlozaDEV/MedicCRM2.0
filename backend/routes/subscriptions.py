@@ -5,6 +5,9 @@ Handles CRUD operations for subscriptions.
 from flask import Blueprint, request, jsonify
 from models import db, Subscription
 from datetime import datetime
+from lib.lemonsqueezy_service import lemonsqueezy_service
+from config.lemonsqueezy import get_variant_id
+import os
 
 subscriptions_bp = Blueprint('subscriptions', __name__, url_prefix='/api/subscriptions')
 
@@ -207,12 +210,102 @@ def delete_subscription(subscription_id):
                 'error': 'Subscription not found'
             }), 404
         
-        subscription.delete()
-        
+    except Exception as e:
         return jsonify({
-            'success': True,
-            'message': 'Subscription deleted successfully'
-        }), 200
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@subscriptions_bp.route('/checkout', methods=['POST'])
+def create_checkout():
+    """
+    Crea una sesión de checkout en LemonSqueezy para upgrade/activación de plan
+    
+    Body:
+        plan_name: str (basic, premium, premium_plus)
+        billing_cycle: str (monthly, yearly) - opcional, default monthly
+        organization_id: int
+        user_id: int
+        user_email: str
+        organization_name: str - opcional
+    
+    Returns:
+        checkout_url: URL para redirigir al usuario al checkout
+    """
+    try:
+        data = request.get_json()
+        
+        # Validar datos requeridos
+        required_fields = ['plan_name', 'organization_id', 'user_id', 'user_email']
+        missing_fields = [field for field in required_fields if field not in data]
+        
+        if missing_fields:
+            return jsonify({
+                'success': False,
+                'error': f'Missing required fields: {", ".join(missing_fields)}'
+            }), 400
+        
+        plan_name = data['plan_name']
+        billing_cycle = data.get('billing_cycle', 'monthly')
+        organization_id = data['organization_id']
+        user_id = data['user_id']
+        user_email = data['user_email']
+        organization_name = data.get('organization_name')
+        
+        # Validar plan
+        valid_plans = ['basic', 'premium', 'premium_plus']
+        if plan_name not in valid_plans:
+            return jsonify({
+                'success': False,
+                'error': f'Invalid plan. Must be one of: {", ".join(valid_plans)}'
+            }), 400
+        
+        # Validar billing cycle
+        valid_cycles = ['monthly', 'yearly']
+        if billing_cycle not in valid_cycles:
+            return jsonify({
+                'success': False,
+                'error': f'Invalid billing_cycle. Must be one of: {", ".join(valid_cycles)}'
+            }), 400
+        
+        # Obtener variant_id de LemonSqueezy
+        variant_id = get_variant_id(plan_name, billing_cycle)
+        
+        if not variant_id:
+            return jsonify({
+                'success': False,
+                'error': f'No variant configured for {plan_name} {billing_cycle}'
+            }), 500
+        
+        # URL de redirección después del checkout
+        frontend_url = os.getenv('FRONTEND_URL', 'http://localhost:3000')
+        redirect_url = f'{frontend_url}/dashboard/subscription?checkout=success'
+        
+        # Crear checkout en LemonSqueezy
+        success, checkout_url, error = lemonsqueezy_service.create_checkout(
+            variant_id=variant_id,
+            organization_id=organization_id,
+            user_id=user_id,
+            user_email=user_email,
+            redirect_url=redirect_url,
+            organization_name=organization_name
+        )
+        
+        if success:
+            return jsonify({
+                'success': True,
+                'data': {
+                    'checkout_url': checkout_url,
+                    'plan_name': plan_name,
+                    'billing_cycle': billing_cycle
+                }
+            }), 200
+        else:
+            return jsonify({
+                'success': False,
+                'error': error
+            }), 500
     
     except Exception as e:
         return jsonify({

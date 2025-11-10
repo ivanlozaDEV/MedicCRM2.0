@@ -1,3 +1,5 @@
+"""Configuration package for DoctorCRM backend"""
+
 import os
 from dotenv import load_dotenv
 
@@ -18,3 +20,4 @@ class Config:
     
     # CORS Configuration
     CORS_ORIGINS = [os.getenv('FRONTEND_URL', 'http://localhost:3000')]
+

@@ -1,6 +1,22 @@
 from datetime import datetime
 from decimal import Decimal
 from models import db
+from config.subscription_plans import (
+    PLAN_LIMITS,
+    PLAN_PRICES,
+    PLAN_TRIAL,
+    PLAN_BASIC,
+    PLAN_PREMIUM,
+    PLAN_PREMIUM_PLUS,
+    CYCLE_MONTHLY,
+    CYCLE_YEARLY,
+    get_plan_limits,
+    get_plan_price,
+    get_lemonsqueezy_variant_id,
+    validate_plan_name,
+    can_upgrade,
+    can_downgrade
+)
 
 
 class Subscription(db.Model):
@@ -42,6 +58,8 @@ class Subscription(db.Model):
     lemonsqueezy_subscription_id = db.Column(db.String(100), unique=True)
     lemonsqueezy_customer_id = db.Column(db.String(100))
     lemonsqueezy_variant_id = db.Column(db.String(100))
+    update_payment_url = db.Column(db.String(500))  # URL para Customer Portal
+
     
     # Plan Limits
     max_users = db.Column(db.Integer, default=1)
@@ -54,13 +72,13 @@ class Subscription(db.Model):
     # Relationships
     organization = db.relationship('Organization', backref=db.backref('subscription', uselist=False))
     
-    # Plan constants
-    PLAN_FREE = 'free'
-    PLAN_BASIC = 'basic'
-    PLAN_PREMIUM = 'premium'
-    PLAN_ENTERPRISE = 'enterprise'
+    # Plan constants (imported from config)
+    PLAN_TRIAL = PLAN_TRIAL
+    PLAN_BASIC = PLAN_BASIC
+    PLAN_PREMIUM = PLAN_PREMIUM
+    PLAN_PREMIUM_PLUS = PLAN_PREMIUM_PLUS
     
-    PLANS = [PLAN_FREE, PLAN_BASIC, PLAN_PREMIUM, PLAN_ENTERPRISE]
+    PLANS = [PLAN_TRIAL, PLAN_BASIC, PLAN_PREMIUM, PLAN_PREMIUM_PLUS]
     
     # Status constants
     STATUS_TRIAL = 'trial'
@@ -71,9 +89,9 @@ class Subscription(db.Model):
     
     STATUSES = [STATUS_TRIAL, STATUS_ACTIVE, STATUS_PAST_DUE, STATUS_CANCELED, STATUS_PAUSED]
     
-    # Billing cycle constants
-    CYCLE_MONTHLY = 'monthly'
-    CYCLE_YEARLY = 'yearly'
+    # Billing cycle constants (imported from config)
+    CYCLE_MONTHLY = CYCLE_MONTHLY
+    CYCLE_YEARLY = CYCLE_YEARLY
     
     CYCLES = [CYCLE_MONTHLY, CYCLE_YEARLY]
     
@@ -99,11 +117,11 @@ class Subscription(db.Model):
     
     @property
     def days_until_expiry(self):
-        """Calculate days until subscription expires"""
+        """Calculate days until subscription expires (can be negative if expired)"""
         if not self.current_period_end:
             return None
         delta = self.current_period_end - datetime.utcnow()
-        return max(0, delta.days)
+        return delta.days  # Permite valores negativos para saber cuántos días pasaron desde expiración
     
     @property
     def is_paid_plan(self):
@@ -145,27 +163,33 @@ class Subscription(db.Model):
         }
     
     @classmethod
-    def create(cls, organization_id, plan_name=PLAN_FREE, **kwargs):
+    def create(cls, organization_id, plan_name=PLAN_TRIAL, billing_cycle=CYCLE_MONTHLY, **kwargs):
         """
         Create a new subscription for an organization.
         
         Args:
             organization_id (int): Organization ID
-            plan_name (str): Plan name (free, basic, premium, enterprise)
+            plan_name (str): Plan name (trial, basic, premium, premium_plus)
+            billing_cycle (str): Billing cycle (monthly, yearly)
             **kwargs: Additional subscription attributes
             
         Returns:
             Subscription: Created subscription instance
         """
-        # Set default limits based on plan
-        limits = cls.get_plan_limits(plan_name)
+        # Set default limits and price based on plan
+        limits = get_plan_limits(plan_name)
+        price = get_plan_price(plan_name, billing_cycle)
+        variant_id = get_lemonsqueezy_variant_id(plan_name, billing_cycle)
         
         subscription = cls(
             organization_id=organization_id,
             plan_name=plan_name,
+            billing_cycle=billing_cycle,
+            plan_price=price,
             max_users=kwargs.get('max_users', limits['max_users']),
             max_patients=kwargs.get('max_patients', limits['max_patients']),
-            **{k: v for k, v in kwargs.items() if k not in ['max_users', 'max_patients']}
+            lemonsqueezy_variant_id=kwargs.get('lemonsqueezy_variant_id', variant_id),
+            **{k: v for k, v in kwargs.items() if k not in ['max_users', 'max_patients', 'lemonsqueezy_variant_id']}
         )
         
         db.session.add(subscription)
@@ -200,17 +224,20 @@ class Subscription(db.Model):
         Returns:
             Subscription: Updated subscription
         """
-        if new_plan_name not in self.PLANS:
+        if not validate_plan_name(new_plan_name):
             raise ValueError(f"Invalid plan name: {new_plan_name}")
         
-        limits = self.get_plan_limits(new_plan_name)
+        limits = get_plan_limits(new_plan_name)
+        new_cycle = billing_cycle or self.billing_cycle
+        price = get_plan_price(new_plan_name, new_cycle)
+        variant_id = get_lemonsqueezy_variant_id(new_plan_name, new_cycle)
         
         self.plan_name = new_plan_name
+        self.billing_cycle = new_cycle
+        self.plan_price = price
         self.max_users = limits['max_users']
         self.max_patients = limits['max_patients']
-        
-        if billing_cycle:
-            self.billing_cycle = billing_cycle
+        self.lemonsqueezy_variant_id = variant_id
         
         self.updated_at = datetime.utcnow()
         db.session.commit()
@@ -310,13 +337,7 @@ class Subscription(db.Model):
         Returns:
             dict: Plan limits
         """
-        limits = {
-            'free': {'max_users': 1, 'max_patients': 50},
-            'basic': {'max_users': 3, 'max_patients': 200},
-            'premium': {'max_users': 10, 'max_patients': 1000},
-            'enterprise': {'max_users': 999, 'max_patients': 999999}
-        }
-        return limits.get(plan_name, limits['free'])
+        return get_plan_limits(plan_name)
     
     @staticmethod
     def find_by_organization(organization_id):

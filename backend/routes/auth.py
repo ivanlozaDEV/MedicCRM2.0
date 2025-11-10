@@ -13,8 +13,9 @@ from models.role import Role
 from models.user_role import UserRole
 from models.role_permission import RolePermission
 from models.permission import Permission
+from models.subscription import Subscription
 from seed_default_roles import seed_default_roles_for_organization
-from datetime import datetime
+from datetime import datetime, timedelta
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/api/auth')
 
@@ -130,6 +131,18 @@ def signup():
             assigned_by=user.id
         )
         db.session.add(user_role)
+        
+        # Create trial subscription (15 days)
+        trial_end = datetime.utcnow() + timedelta(days=15)
+        subscription = Subscription.create(
+            organization_id=organization.id,
+            plan_name='trial',
+            status='trial',
+            trial_end_date=trial_end,
+            current_period_start=datetime.utcnow(),
+            current_period_end=trial_end
+        )
+        print(f"✅ Created trial subscription for organization {organization.id} - expires {trial_end}")
         
         db.session.commit()
         

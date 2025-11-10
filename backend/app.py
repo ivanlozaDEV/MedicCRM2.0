@@ -35,7 +35,7 @@ db.init_app(app)
 from routes import (
     auth_bp, organizations_bp, users_bp, subscriptions_bp,
     roles_bp, permissions_bp, specialties_bp,
-    role_permissions_bp, user_specialties_bp
+    role_permissions_bp, user_specialties_bp, webhooks_bp
 )
 
 app.register_blueprint(auth_bp)
@@ -47,6 +47,7 @@ app.register_blueprint(permissions_bp)
 app.register_blueprint(specialties_bp)
 app.register_blueprint(role_permissions_bp)
 app.register_blueprint(user_specialties_bp)
+app.register_blueprint(webhooks_bp)
 
 # Create tables
 with app.app_context():
