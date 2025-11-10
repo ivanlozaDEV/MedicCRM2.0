@@ -223,7 +223,7 @@ def login():
 @jwt_required()
 def get_current_user():
     """
-    Get current authenticated user with permissions and roles
+    Get current authenticated user with permissions, roles, and specialties
     """
     try:
         user_id = int(get_jwt_identity())
@@ -238,7 +238,7 @@ def get_current_user():
         # Get organization
         organization = Organization.query.get(user.organization_id)
         
-        # Get user's roles from user_roles table
+        # Get user's roles from user_roles table with full permission details
         user_role_records = UserRole.query.filter_by(user_id=user.id).all()
         roles = []
         for ur in user_role_records:
@@ -246,9 +246,23 @@ def get_current_user():
                 role_dict = ur.role.to_dict()
                 role_dict['is_primary'] = ur.is_primary
                 role_dict['assigned_at'] = ur.assigned_at.isoformat() if ur.assigned_at else None
+                
+                # Get permissions for this role with full details
+                role_permissions = RolePermission.query.filter_by(role_id=ur.role_id).all()
+                role_permissions_list = []
+                for rp in role_permissions:
+                    if rp.permission:
+                        role_permissions_list.append({
+                            'id': rp.permission.id,
+                            'name': rp.permission.module_key,
+                            'description': rp.permission.description,
+                            'display_name': rp.permission.display_name,
+                            'category': rp.permission.category
+                        })
+                role_dict['permissions'] = role_permissions_list
                 roles.append(role_dict)
         
-        # Get user's permissions from their roles
+        # Get user's permissions from their roles (for backward compatibility)
         permissions = []
         permission_ids = set()  # To avoid duplicates
         
@@ -259,10 +273,13 @@ def get_current_user():
                     permissions.append(rp.permission.module_key)
                     permission_ids.add(rp.permission_id)
         
+        # Get user dict with specialties
+        user_dict = user.to_dict(include_specialties=True)
+        
         return jsonify({
             'success': True,
             'data': {
-                'user': user.to_dict(),
+                'user': user_dict,
                 'organization': organization.to_dict() if organization else None,
                 'roles': roles,
                 'permissions': permissions
@@ -271,6 +288,8 @@ def get_current_user():
         
     except Exception as e:
         print(f"Get current user error: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({
             'success': False,
             'message': f'Failed to get user: {str(e)}'

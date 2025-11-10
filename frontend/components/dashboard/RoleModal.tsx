@@ -330,129 +330,195 @@ export default function RoleModal({ isOpen, onClose, onSuccess, role, mode }: Ro
             </div>
 
             {showPermissions && (
-              <div className="bg-gray-50 rounded-lg p-4 max-h-96 overflow-y-auto space-y-4">
+              <div className="bg-gray-50 rounded-lg p-4 max-h-[500px] overflow-y-auto space-y-3">
                 {loadingPermissions ? (
                   <div className="text-center py-4 text-gray-500">
                     Cargando permisos...
                   </div>
                 ) : permissionsGrouped ? (
                   <>
-                    {/* System Permissions */}
-                    {permissionsGrouped.system && permissionsGrouped.system.length > 0 && (
-                      <div>
-                        <div className="flex items-center justify-between mb-2">
-                          <h4 className="text-sm font-semibold text-gray-900">🔧 Sistema</h4>
-                          <button
-                            type="button"
-                            onClick={() => toggleCategoryPermissions('system')}
-                            className="text-xs text-blue-600 hover:text-blue-700"
-                          >
-                            {permissionsGrouped.system.every(p => selectedPermissions.includes(p.id))
-                              ? 'Deseleccionar todos'
-                              : 'Seleccionar todos'}
-                          </button>
-                        </div>
-                        <div className="grid grid-cols-1 gap-2">
-                          {permissionsGrouped.system.map((permission) => (
-                            <label
-                              key={permission.id}
-                              className="flex items-start space-x-2 text-sm cursor-pointer hover:bg-white rounded p-2 transition-colors"
-                            >
-                              <input
-                                type="checkbox"
-                                checked={selectedPermissions.includes(permission.id)}
-                                onChange={() => togglePermission(permission.id)}
-                                className="mt-0.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                              />
-                              <div className="flex-1">
-                                <div className="font-medium text-gray-900">{permission.display_name}</div>
-                                {permission.description && (
-                                  <div className="text-xs text-gray-500">{permission.description}</div>
-                                )}
-                              </div>
-                            </label>
-                          ))}
-                        </div>
-                      </div>
-                    )}
+                    {/* Render permissions with hierarchical structure */}
+                    {(() => {
+                      const allPermissions = [
+                        ...(permissionsGrouped.clinical || []),
+                        ...(permissionsGrouped.administrative || []),
+                        ...(permissionsGrouped.system || [])
+                      ];
 
-                    {/* Clinical Permissions */}
-                    {permissionsGrouped.clinical && permissionsGrouped.clinical.length > 0 && (
-                      <div>
-                        <div className="flex items-center justify-between mb-2">
-                          <h4 className="text-sm font-semibold text-gray-900">⚕️ Clínico</h4>
-                          <button
-                            type="button"
-                            onClick={() => toggleCategoryPermissions('clinical')}
-                            className="text-xs text-blue-600 hover:text-blue-700"
-                          >
-                            {permissionsGrouped.clinical.every(p => selectedPermissions.includes(p.id))
-                              ? 'Deseleccionar todos'
-                              : 'Seleccionar todos'}
-                          </button>
-                        </div>
-                        <div className="grid grid-cols-1 gap-2">
-                          {permissionsGrouped.clinical.map((permission) => (
-                            <label
-                              key={permission.id}
-                              className="flex items-start space-x-2 text-sm cursor-pointer hover:bg-white rounded p-2 transition-colors"
-                            >
-                              <input
-                                type="checkbox"
-                                checked={selectedPermissions.includes(permission.id)}
-                                onChange={() => togglePermission(permission.id)}
-                                className="mt-0.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                              />
-                              <div className="flex-1">
-                                <div className="font-medium text-gray-900">{permission.display_name}</div>
-                                {permission.description && (
-                                  <div className="text-xs text-gray-500">{permission.description}</div>
-                                )}
-                              </div>
-                            </label>
-                          ))}
-                        </div>
-                      </div>
-                    )}
+                      // Define subcategory mapping
+                      const getSubcategory = (moduleName: string) => {
+                        if (moduleName.startsWith('patients') || moduleName.startsWith('patient_contacts') || 
+                            moduleName.startsWith('allergies') || moduleName.startsWith('chronic_conditions')) {
+                          return 'patients';
+                        }
+                        if (moduleName.startsWith('appointments') || moduleName.startsWith('appointment_types')) {
+                          return 'appointments';
+                        }
+                        if (moduleName.startsWith('consultations') || moduleName.startsWith('vital_signs') || 
+                            moduleName.startsWith('consultation_templates')) {
+                          return 'consultations';
+                        }
+                        if (moduleName.startsWith('prescriptions') || moduleName.startsWith('prescription_items')) {
+                          return 'prescriptions';
+                        }
+                        if (moduleName.startsWith('documents') || moduleName.startsWith('lab_results')) {
+                          return 'documents';
+                        }
+                        if (moduleName.startsWith('specialties')) {
+                          return 'specialties';
+                        }
+                        if (moduleName.startsWith('users') || moduleName.startsWith('roles') || 
+                            moduleName.startsWith('permissions') || moduleName.startsWith('role_permissions')) {
+                          return 'users_roles';
+                        }
+                        if (moduleName.startsWith('services') || moduleName.startsWith('consultation_services')) {
+                          return 'services';
+                        }
+                        if (moduleName.startsWith('payments') || moduleName.startsWith('payment_methods')) {
+                          return 'payments';
+                        }
+                        if (moduleName.startsWith('rooms') || moduleName.startsWith('doctor_schedules')) {
+                          return 'schedules';
+                        }
+                        if (moduleName.startsWith('organizations') || moduleName.startsWith('subscriptions') || 
+                            moduleName.startsWith('settings') || moduleName.startsWith('dashboard')) {
+                          return 'organization';
+                        }
+                        if (moduleName.startsWith('audit_logs') || moduleName.startsWith('notifications')) {
+                          return 'system';
+                        }
+                        if (moduleName.startsWith('reports')) {
+                          return 'reports';
+                        }
+                        return 'other';
+                      };
 
-                    {/* Administrative Permissions */}
-                    {permissionsGrouped.administrative && permissionsGrouped.administrative.length > 0 && (
-                      <div>
-                        <div className="flex items-center justify-between mb-2">
-                          <h4 className="text-sm font-semibold text-gray-900">📊 Administrativo</h4>
-                          <button
-                            type="button"
-                            onClick={() => toggleCategoryPermissions('administrative')}
-                            className="text-xs text-blue-600 hover:text-blue-700"
-                          >
-                            {permissionsGrouped.administrative.every(p => selectedPermissions.includes(p.id))
-                              ? 'Deseleccionar todos'
-                              : 'Seleccionar todos'}
-                          </button>
-                        </div>
-                        <div className="grid grid-cols-1 gap-2">
-                          {permissionsGrouped.administrative.map((permission) => (
-                            <label
-                              key={permission.id}
-                              className="flex items-start space-x-2 text-sm cursor-pointer hover:bg-white rounded p-2 transition-colors"
-                            >
-                              <input
-                                type="checkbox"
-                                checked={selectedPermissions.includes(permission.id)}
-                                onChange={() => togglePermission(permission.id)}
-                                className="mt-0.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                              />
-                              <div className="flex-1">
-                                <div className="font-medium text-gray-900">{permission.display_name}</div>
-                                {permission.description && (
-                                  <div className="text-xs text-gray-500">{permission.description}</div>
-                                )}
-                              </div>
-                            </label>
-                          ))}
-                        </div>
-                      </div>
-                    )}
+                      // Group by category and subcategory
+                      const permissionsByCategory = allPermissions.reduce((acc: any, permission: Permission) => {
+                        const category = permission.category || 'other';
+                        const moduleName = permission.module_key.split('.')[0];
+                        const subcategory = getSubcategory(moduleName);
+                        
+                        if (!acc[category]) {
+                          acc[category] = {};
+                        }
+                        if (!acc[category][subcategory]) {
+                          acc[category][subcategory] = [];
+                        }
+                        acc[category][subcategory].push(permission);
+                        return acc;
+                      }, {});
+
+                      // Category configurations
+                      const categoryConfig: Record<string, { label: string; color: string }> = {
+                        clinical: { label: '⚕️ Clínicos', color: 'blue' },
+                        administrative: { label: '📊 Administrativos', color: 'purple' },
+                        system: { label: '⚙️ Sistema', color: 'gray' },
+                      };
+
+                      // Subcategory configurations
+                      const subcategoryConfig: Record<string, { label: string; icon: string }> = {
+                        patients: { label: 'Pacientes', icon: '👥' },
+                        appointments: { label: 'Citas', icon: '📅' },
+                        consultations: { label: 'Consultas', icon: '📋' },
+                        prescriptions: { label: 'Recetas', icon: '💊' },
+                        documents: { label: 'Documentos', icon: '📄' },
+                        specialties: { label: 'Especialidades', icon: '❤️' },
+                        users_roles: { label: 'Usuarios y Roles', icon: '👤' },
+                        services: { label: 'Servicios', icon: '🏥' },
+                        payments: { label: 'Pagos', icon: '💰' },
+                        schedules: { label: 'Horarios', icon: '⏰' },
+                        organization: { label: 'Organización', icon: '🏢' },
+                        system: { label: 'Sistema', icon: '🔔' },
+                        reports: { label: 'Reportes', icon: '📊' },
+                        other: { label: 'Otros', icon: '📌' }
+                      };
+
+                      return Object.entries(permissionsByCategory).map(([category, subcategories]: [string, any]) => {
+                        const config = categoryConfig[category as keyof typeof categoryConfig] || { label: category, color: 'gray' };
+                        const categoryPermissions = Object.values(subcategories).flat() as Permission[];
+                        const allCategorySelected = categoryPermissions.every(p => selectedPermissions.includes(p.id));
+
+                        return (
+                          <div key={category} className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                            {/* Category Header */}
+                            <div className={`px-3 py-2 bg-${config.color}-50 border-b border-${config.color}-100 flex items-center justify-between`}>
+                              <span className="text-xs font-bold text-gray-900">{config.label}</span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const categoryPermissionIds = categoryPermissions.map(p => p.id);
+                                  if (allCategorySelected) {
+                                    setSelectedPermissions(prev => prev.filter(id => !categoryPermissionIds.includes(id)));
+                                  } else {
+                                    setSelectedPermissions(prev => [...new Set([...prev, ...categoryPermissionIds])]);
+                                  }
+                                }}
+                                className="text-[10px] text-blue-600 hover:text-blue-700 font-medium"
+                              >
+                                {allCategorySelected ? 'Deseleccionar' : 'Seleccionar'} todos
+                              </button>
+                            </div>
+
+                            {/* Subcategories */}
+                            <div className="p-2 space-y-2">
+                              {Object.entries(subcategories).map(([subcategory, permissions]: [string, any]) => {
+                                const subConfig = subcategoryConfig[subcategory] || subcategoryConfig.other;
+                                const allSubSelected = permissions.every((p: Permission) => selectedPermissions.includes(p.id));
+
+                                return (
+                                  <div key={subcategory} className="bg-gray-50 rounded border border-gray-200">
+                                    {/* Subcategory Header */}
+                                    <div className="px-2 py-1.5 bg-white border-b border-gray-200 flex items-center justify-between">
+                                      <span className="text-[11px] font-semibold text-gray-700">
+                                        {subConfig.icon} {subConfig.label}
+                                      </span>
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          const subPermissionIds = permissions.map((p: Permission) => p.id);
+                                          if (allSubSelected) {
+                                            setSelectedPermissions(prev => prev.filter(id => !subPermissionIds.includes(id)));
+                                          } else {
+                                            setSelectedPermissions(prev => [...new Set([...prev, ...subPermissionIds])]);
+                                          }
+                                        }}
+                                        className="text-[10px] text-blue-600 hover:text-blue-700"
+                                      >
+                                        {allSubSelected ? '✓' : '+'} {permissions.length}
+                                      </button>
+                                    </div>
+
+                                    {/* Permissions */}
+                                    <div className="p-1.5 space-y-1">
+                                      {permissions.map((permission: Permission) => (
+                                        <label
+                                          key={permission.id}
+                                          className="flex items-start space-x-2 text-xs cursor-pointer hover:bg-white rounded p-1.5 transition-colors"
+                                        >
+                                          <input
+                                            type="checkbox"
+                                            checked={selectedPermissions.includes(permission.id)}
+                                            onChange={() => togglePermission(permission.id)}
+                                            className="mt-0.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-3.5 w-3.5"
+                                          />
+                                          <div className="flex-1 min-w-0">
+                                            <div className="font-medium text-gray-900 leading-tight">{permission.display_name}</div>
+                                            {permission.description && (
+                                              <div className="text-[10px] text-gray-500 leading-tight mt-0.5">{permission.description}</div>
+                                            )}
+                                          </div>
+                                        </label>
+                                      ))}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      });
+                    })()}
                   </>
                 ) : (
                   <div className="text-center py-4 text-gray-500">
