@@ -44,10 +44,14 @@ def lemonsqueezy_webhook():
         # Obtener datos del evento
         event_data = request.get_json()
         
+        # Log del evento para debugging
+        print(f"📨 Webhook recibido: {event_data.get('meta', {}).get('event_name', 'unknown')}")
+        
         # Procesar evento
         success, subscription_data, error = lemonsqueezy_service.process_webhook_event(event_data)
         
         if not success:
+            print(f"⚠️  Error procesando webhook: {error}")
             return jsonify({
                 'success': False,
                 'error': error
@@ -56,11 +60,14 @@ def lemonsqueezy_webhook():
         event_name = subscription_data.get('event_name')
         organization_id = subscription_data.get('organization_id')
         
+        # Si no hay organization_id, es un evento que no nos interesa (ej: order_created, license_key_created, etc)
+        # Lo ignoramos pero retornamos 200 para que LemonSqueezy no lo reintente
         if not organization_id:
+            print(f"ℹ️  Evento {event_name} sin organization_id, ignorando...")
             return jsonify({
-                'success': False,
-                'error': 'Missing organization_id in custom_data'
-            }), 400
+                'success': True,
+                'message': f'Event {event_name} ignored (no organization_id)'
+            }), 200
         
         # Obtener plan_name y billing_cycle del variant_id
         variant_id = subscription_data.get('variant_id')
@@ -150,12 +157,13 @@ def lemonsqueezy_webhook():
             if subscription:
                 subscription.status = 'past_due'
                 subscription.update()
-        
         elif event_name == 'subscription_cancelled':
             if subscription:
                 subscription.status = 'canceled'
                 subscription.canceled_at = datetime.utcnow()
                 subscription.update()
+        
+        print(f"✅ Webhook procesado exitosamente: {event_name} para org_id={organization_id}")
         
         return jsonify({
             'success': True,
