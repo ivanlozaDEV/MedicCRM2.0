@@ -140,4 +140,27 @@ export const subscriptionService = {
       }),
     });
   },
+
+  /**
+   * Upgrade/downgrade existing subscription
+   */
+  upgradeSubscription: async (params: {
+    plan_name: string;
+    billing_cycle?: 'monthly' | 'yearly';
+    is_upgrade?: boolean;
+  }): Promise<{ 
+    success: boolean; 
+    data?: { plan_name: string; billing_cycle: string }; 
+    message?: string;
+    error?: string 
+  }> => {
+    return apiRequest('/subscriptions/upgrade', {
+      method: 'POST',
+      body: JSON.stringify({
+        plan_name: params.plan_name,
+        billing_cycle: params.billing_cycle || 'monthly',
+        is_upgrade: params.is_upgrade !== false // Default true
+      }),
+    });
+  },
 };

@@ -3,9 +3,10 @@ Subscription routes for DoctorCRM API.
 Handles CRUD operations for subscriptions.
 """
 from flask import Blueprint, request, jsonify
-from models import db, Subscription
+from flask_jwt_extended import jwt_required, get_jwt_identity
+from models import db, Subscription, User
 from datetime import datetime
-from lib.lemonsqueezy_service import lemonsqueezy_service
+from lib.lemonsqueezy_service import lemonsqueezy_service, LemonSqueezyService
 from config.lemonsqueezy import get_variant_id
 import os
 
@@ -308,6 +309,109 @@ def create_checkout():
             }), 500
     
     except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@subscriptions_bp.route('/upgrade', methods=['POST'])
+@jwt_required()
+def upgrade_subscription():
+    """Actualiza suscripción existente (upgrade/downgrade)"""
+    try:
+        current_user_id = get_jwt_identity()
+        print(f"🔍 Current user ID: {current_user_id}")
+        print(f"🔍 Type: {type(current_user_id)}")
+        
+        user = User.query.get(current_user_id)
+        
+        if not user or not user.organization_id:
+            return jsonify({
+                'success': False,
+                'error': 'Usuario no encontrado o sin organización'
+            }), 404
+        
+        data = request.get_json()
+        plan_name = data.get('plan_name')
+        billing_cycle = data.get('billing_cycle', 'monthly')
+        is_upgrade = data.get('is_upgrade', True)  # True para upgrade, False para downgrade
+        
+        print(f"🔍 Plan: {plan_name}, Billing: {billing_cycle}, Is Upgrade: {is_upgrade}")
+        
+        if not plan_name:
+            return jsonify({
+                'success': False,
+                'error': 'Plan requerido'
+            }), 400
+        
+        # Obtener suscripción actual
+        subscription = Subscription.query.filter_by(
+            organization_id=user.organization_id
+        ).first()
+        
+        print(f"🔍 Subscription found: {subscription}")
+        print(f"🔍 LS ID: {subscription.lemonsqueezy_subscription_id if subscription else 'None'}")
+        
+        if not subscription or not subscription.lemonsqueezy_subscription_id:
+            return jsonify({
+                'success': False,
+                'error': 'No se encontró suscripción activa. Usa /checkout para crear una nueva.'
+            }), 400
+        
+        # No permitir "upgrade" a trial
+        if plan_name == 'trial':
+            return jsonify({
+                'success': False,
+                'error': 'No puedes volver a trial'
+            }), 400
+        
+        # Obtener variant_id del nuevo plan
+        variant_id = get_variant_id(plan_name, billing_cycle)
+        print(f"🔍 Variant ID: {variant_id}")
+        
+        if not variant_id:
+            return jsonify({
+                'success': False,
+                'error': 'Plan o ciclo de facturación inválido'
+            }), 400
+        
+        # Actualizar suscripción en LemonSqueezy
+        lemonsqueezy = LemonSqueezyService()
+        # invoice_immediately=True para upgrades (prorrateo inmediato)
+        # invoice_immediately=False para downgrades (al final del período)
+        success, error = lemonsqueezy.update_subscription(
+            subscription.lemonsqueezy_subscription_id,
+            variant_id,
+            invoice_immediately=is_upgrade
+        )
+        
+        print(f"🔍 Update result: success={success}, error={error}")
+        
+        if success:
+            # Actualizar base de datos local
+            subscription.plan_name = plan_name
+            subscription.billing_cycle = billing_cycle
+            subscription.lemonsqueezy_variant_id = variant_id
+            db.session.commit()
+            
+            return jsonify({
+                'success': True,
+                'message': 'Suscripción actualizada correctamente',
+                'data': {
+                    'plan_name': plan_name,
+                    'billing_cycle': billing_cycle
+                }
+            }), 200
+        else:
+            return jsonify({
+                'success': False,
+                'error': error
+            }), 500
+    
+    except Exception as e:
+        print(f"❌ Error in upgrade: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({
             'success': False,
             'error': str(e)
