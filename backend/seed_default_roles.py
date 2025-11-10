@@ -59,11 +59,13 @@ def seed_default_roles_for_organization(organization_id):
                 # Dashboard
                 'dashboard.view',
                 
-                # Pacientes - todo excepto eliminar
-                'patients.view', 'patients.create', 'patients.update',
-                'patient_contacts.view', 'patient_contacts.create', 'patient_contacts.update',
-                'allergies.view', 'allergies.create', 'allergies.update',
-                'chronic_conditions.view', 'chronic_conditions.create', 'chronic_conditions.update',
+                # Pacientes - todo excepto eliminar (FHIR compliant)
+                'patients.view', 'patients.create', 'patients.update', 'patients.stats', 'patients.activate',
+                'patient_contacts.view', 'patient_contacts.create', 'patient_contacts.update', 
+                'patient_contacts.set_primary', 'patient_contacts.reorder',
+                'patient_allergies.view', 'patient_allergies.create', 'patient_allergies.update',
+                'patient_medications.view', 'patient_medications.create', 'patient_medications.update', 'patient_medications.discontinue',
+                'patient_conditions.view', 'patient_conditions.create', 'patient_conditions.update', 'patient_conditions.resolve',
                 
                 # Citas
                 'appointments.view', 'appointments.create', 'appointments.update',
@@ -100,11 +102,12 @@ def seed_default_roles_for_organization(organization_id):
                 # Dashboard
                 'dashboard.view',
                 
-                # Pacientes - ver y editar, no eliminar
+                # Pacientes - ver y editar, no eliminar (FHIR compliant)
                 'patients.view', 'patients.update',
-                'patient_contacts.view', 'patient_contacts.create',
-                'allergies.view', 'allergies.create',
-                'chronic_conditions.view', 'chronic_conditions.create',
+                'patient_contacts.view', 'patient_contacts.create', 'patient_contacts.update',
+                'patient_allergies.view', 'patient_allergies.create', 'patient_allergies.update',
+                'patient_medications.view', 'patient_medications.create', 'patient_medications.update',
+                'patient_conditions.view', 'patient_conditions.create', 'patient_conditions.update',
                 
                 # Citas - ver y crear
                 'appointments.view', 'appointments.create',
@@ -132,9 +135,10 @@ def seed_default_roles_for_organization(organization_id):
                 # Dashboard
                 'dashboard.view',
                 
-                # Pacientes - control total (solo datos administrativos)
-                'patients.view', 'patients.create', 'patients.update', 'patients.delete',
+                # Pacientes - control total (solo datos administrativos, no clínicos)
+                'patients.view', 'patients.create', 'patients.update', 'patients.delete', 'patients.activate',
                 'patient_contacts.view', 'patient_contacts.create', 'patient_contacts.update', 'patient_contacts.delete',
+                'patient_contacts.set_primary', 'patient_contacts.reorder',
                 
                 # Citas - control total
                 'appointments.view', 'appointments.create', 'appointments.update', 'appointments.delete',

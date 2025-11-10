@@ -50,57 +50,69 @@ def seed_permissions():
             # 6. Role Permissions
             ('role_permissions.manage', 'Gestionar Permisos de Roles', 'Asignar/remover permisos a roles', 'system'),
             
-            # ============ CLINICAL - PACIENTES (4 tables) ============
-            # 7. Patients
+            # ============ CLINICAL - PACIENTES (5 tables - FHIR compliant) ============
+            # 7. Patients (FHIR Patient)
             ('patients.view', 'Ver Pacientes', 'Ver listado y expedientes de pacientes', 'clinical'),
             ('patients.create', 'Crear Pacientes', 'Registrar nuevos pacientes', 'clinical'),
             ('patients.update', 'Editar Pacientes', 'Modificar información de pacientes', 'clinical'),
-            ('patients.delete', 'Eliminar Pacientes', 'Eliminar registros de pacientes', 'clinical'),
+            ('patients.delete', 'Eliminar Pacientes', 'Eliminar/desactivar registros de pacientes', 'clinical'),
+            ('patients.activate', 'Activar Pacientes', 'Reactivar pacientes desactivados', 'clinical'),
+            ('patients.stats', 'Ver Estadísticas de Pacientes', 'Ver estadísticas y reportes de pacientes', 'clinical'),
             
-            # 8. Patient Contacts
+            # 8. Patient Contacts (FHIR RelatedPerson)
             ('patient_contacts.view', 'Ver Contactos de Emergencia', 'Ver contactos de emergencia de pacientes', 'clinical'),
             ('patient_contacts.create', 'Crear Contactos de Emergencia', 'Agregar contactos de emergencia', 'clinical'),
             ('patient_contacts.update', 'Editar Contactos de Emergencia', 'Modificar contactos de emergencia', 'clinical'),
             ('patient_contacts.delete', 'Eliminar Contactos de Emergencia', 'Eliminar contactos de emergencia', 'clinical'),
+            ('patient_contacts.set_primary', 'Definir Contacto Principal', 'Marcar contacto como principal', 'clinical'),
+            ('patient_contacts.reorder', 'Reordenar Contactos', 'Cambiar prioridad de contactos', 'clinical'),
             
-            # 9. Allergies
-            ('allergies.view', 'Ver Alergias', 'Ver alergias de pacientes', 'clinical'),
-            ('allergies.create', 'Registrar Alergias', 'Registrar nuevas alergias de pacientes', 'clinical'),
-            ('allergies.update', 'Editar Alergias', 'Modificar registros de alergias', 'clinical'),
-            ('allergies.delete', 'Eliminar Alergias', 'Eliminar registros de alergias', 'clinical'),
+            # 9. Patient Allergies (FHIR AllergyIntolerance)
+            ('patient_allergies.view', 'Ver Alergias', 'Ver alergias e intolerancias de pacientes (FHIR)', 'clinical'),
+            ('patient_allergies.create', 'Registrar Alergias', 'Registrar alergias con codificación SNOMED/RxNorm', 'clinical'),
+            ('patient_allergies.update', 'Editar Alergias', 'Modificar registros de alergias', 'clinical'),
+            ('patient_allergies.delete', 'Eliminar Alergias', 'Eliminar registros de alergias', 'clinical'),
             
-            # 10. Chronic Conditions
-            ('chronic_conditions.view', 'Ver Condiciones Crónicas', 'Ver condiciones crónicas de pacientes', 'clinical'),
-            ('chronic_conditions.create', 'Registrar Condiciones Crónicas', 'Registrar nuevas condiciones crónicas', 'clinical'),
-            ('chronic_conditions.update', 'Editar Condiciones Crónicas', 'Modificar condiciones crónicas', 'clinical'),
-            ('chronic_conditions.delete', 'Eliminar Condiciones Crónicas', 'Eliminar registros de condiciones crónicas', 'clinical'),
+            # 10. Patient Medications (FHIR MedicationStatement)
+            ('patient_medications.view', 'Ver Medicamentos', 'Ver medicamentos actuales del paciente (FHIR)', 'clinical'),
+            ('patient_medications.create', 'Registrar Medicamentos', 'Registrar medicamentos con codificación RxNorm/NDC', 'clinical'),
+            ('patient_medications.update', 'Editar Medicamentos', 'Modificar información de medicamentos', 'clinical'),
+            ('patient_medications.delete', 'Eliminar Medicamentos', 'Eliminar registros de medicamentos', 'clinical'),
+            ('patient_medications.discontinue', 'Descontinuar Medicamentos', 'Marcar medicamentos como descontinuados', 'clinical'),
+            
+            # 11. Patient Conditions (FHIR Condition)
+            ('patient_conditions.view', 'Ver Condiciones', 'Ver diagnósticos y condiciones del paciente (FHIR)', 'clinical'),
+            ('patient_conditions.create', 'Registrar Condiciones', 'Registrar condiciones con codificación ICD-10/SNOMED', 'clinical'),
+            ('patient_conditions.update', 'Editar Condiciones', 'Modificar información de condiciones', 'clinical'),
+            ('patient_conditions.delete', 'Eliminar Condiciones', 'Eliminar registros de condiciones', 'clinical'),
+            ('patient_conditions.resolve', 'Resolver Condiciones', 'Marcar condiciones como resueltas', 'clinical'),
             
             # ============ CLINICAL - CITAS Y CONSULTAS (9 tables) ============
-            # 11. Specialties
+            # 12. Specialties
             ('specialties.view', 'Ver Especialidades', 'Ver especialidades médicas disponibles', 'clinical'),
             ('specialties.create', 'Crear Especialidades', 'Crear nuevas especialidades médicas', 'clinical'),
             ('specialties.update', 'Editar Especialidades', 'Modificar especialidades médicas', 'clinical'),
             ('specialties.delete', 'Eliminar Especialidades', 'Eliminar especialidades médicas', 'clinical'),
             
-            # 12. Appointment Types
+            # 13. Appointment Types
             ('appointment_types.view', 'Ver Tipos de Cita', 'Ver tipos de cita disponibles', 'clinical'),
             ('appointment_types.create', 'Crear Tipos de Cita', 'Crear nuevos tipos de cita', 'clinical'),
             ('appointment_types.update', 'Editar Tipos de Cita', 'Modificar tipos de cita', 'clinical'),
             ('appointment_types.delete', 'Eliminar Tipos de Cita', 'Eliminar tipos de cita', 'clinical'),
             
-            # 13. Rooms
+            # 14. Rooms
             ('rooms.view', 'Ver Salas/Consultorios', 'Ver listado de salas y consultorios', 'administrative'),
             ('rooms.create', 'Crear Salas/Consultorios', 'Crear nuevas salas/consultorios', 'administrative'),
             ('rooms.update', 'Editar Salas/Consultorios', 'Modificar salas/consultorios', 'administrative'),
             ('rooms.delete', 'Eliminar Salas/Consultorios', 'Eliminar salas/consultorios', 'administrative'),
             
-            # 14. Doctor Schedules
+            # 15. Doctor Schedules
             ('doctor_schedules.view', 'Ver Horarios de Atención', 'Ver horarios de doctores', 'administrative'),
             ('doctor_schedules.create', 'Crear Horarios de Atención', 'Crear horarios para doctores', 'administrative'),
             ('doctor_schedules.update', 'Editar Horarios de Atención', 'Modificar horarios de doctores', 'administrative'),
             ('doctor_schedules.delete', 'Eliminar Horarios de Atención', 'Eliminar horarios de doctores', 'administrative'),
             
-            # 15. Appointments
+            # 16. Appointments
             ('appointments.view', 'Ver Citas', 'Ver citas agendadas', 'clinical'),
             ('appointments.create', 'Crear Citas', 'Agendar nuevas citas', 'clinical'),
             ('appointments.update', 'Editar Citas', 'Modificar o reagendar citas', 'clinical'),
