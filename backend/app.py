@@ -16,7 +16,12 @@ from routes import (
     permissions_bp,
     specialties_bp,
     role_permissions_bp,
-    user_specialties_bp
+    user_specialties_bp,
+    patients_bp,
+    patient_contacts_bp,
+    patient_allergies_bp,
+    patient_medications_bp,
+    patient_conditions_bp
 )
 
 app = Flask(__name__)
@@ -35,7 +40,9 @@ db.init_app(app)
 from routes import (
     auth_bp, organizations_bp, users_bp, subscriptions_bp,
     roles_bp, permissions_bp, specialties_bp,
-    role_permissions_bp, user_specialties_bp, webhooks_bp
+    role_permissions_bp, user_specialties_bp, webhooks_bp,
+    patients_bp, patient_contacts_bp,
+    patient_allergies_bp, patient_medications_bp, patient_conditions_bp
 )
 
 app.register_blueprint(auth_bp)
@@ -48,6 +55,11 @@ app.register_blueprint(specialties_bp)
 app.register_blueprint(role_permissions_bp)
 app.register_blueprint(user_specialties_bp)
 app.register_blueprint(webhooks_bp)
+app.register_blueprint(patients_bp)
+app.register_blueprint(patient_contacts_bp)
+app.register_blueprint(patient_allergies_bp)
+app.register_blueprint(patient_medications_bp)
+app.register_blueprint(patient_conditions_bp)
 
 # Create tables
 with app.app_context():

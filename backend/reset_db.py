@@ -21,6 +21,11 @@ from models.role_permission import RolePermission
 from models.specialty import Specialty
 from models.user_specialty import UserSpecialty
 from models.user_role import UserRole
+from models.patient import Patient
+from models.patient_contact import PatientContact
+from models.patient_allergy import PatientAllergy
+from models.patient_medication import PatientMedication
+from models.patient_condition import PatientCondition
 
 
 def reset_database():
@@ -92,6 +97,11 @@ def reset_database():
         print("  - specialties")
         print("  - user_specialties")
         print("  - user_roles")
+        print("  - patients")
+        print("  - patient_contacts")
+        print("  - patient_allergies")
+        print("  - patient_medications")
+        print("  - patient_conditions")
         print("\n✨ Database is now clean and ready to use!")
         print("=" * 60)
 

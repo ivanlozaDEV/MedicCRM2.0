@@ -12,6 +12,11 @@ from models.specialty import Specialty
 from models.role_permission import RolePermission
 from models.user_specialty import UserSpecialty
 from models.user_role import UserRole
+from models.patient import Patient
+from models.patient_contact import PatientContact
+from models.patient_allergy import PatientAllergy
+from models.patient_medication import PatientMedication
+from models.patient_condition import PatientCondition
 
 __all__ = [
     'db',
@@ -23,6 +28,11 @@ __all__ = [
     'Specialty',
     'RolePermission',
     'UserSpecialty',
-    'UserRole'
+    'UserRole',
+    'Patient',
+    'PatientContact',
+    'PatientAllergy',
+    'PatientMedication',
+    'PatientCondition'
 ]
 

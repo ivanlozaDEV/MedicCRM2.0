@@ -29,3 +29,18 @@ export type { RolePermission } from './rolePermissionService';
 
 export { userSpecialtyService } from './userSpecialtyService';
 export type { UserSpecialty } from './userSpecialtyService';
+
+export { patientService } from './patientService';
+export type { Patient, CreatePatientData, UpdatePatientData, PatientStats } from './patientService';
+
+export { patientContactService } from './patientContactService';
+export type { PatientContact, CreatePatientContactData, UpdatePatientContactData } from './patientContactService';
+
+export { patientAllergyService } from './patientAllergyService';
+export type { PatientAllergy, CreatePatientAllergyData, UpdatePatientAllergyData } from './patientAllergyService';
+
+export { patientMedicationService } from './patientMedicationService';
+export type { PatientMedication, CreatePatientMedicationData, UpdatePatientMedicationData } from './patientMedicationService';
+
+export { patientConditionService } from './patientConditionService';
+export type { PatientCondition, CreatePatientConditionData, UpdatePatientConditionData } from './patientConditionService';
