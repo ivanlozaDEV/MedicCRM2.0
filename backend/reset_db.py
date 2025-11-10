@@ -48,11 +48,21 @@ def reset_database():
         
         print("\n🗑️  Dropping all tables...")
         try:
-            db.drop_all()
-            print("✅ All tables dropped successfully")
+            # Use raw SQL with CASCADE to drop all tables including dependencies
+            db.session.execute(db.text('DROP SCHEMA public CASCADE'))
+            db.session.execute(db.text('CREATE SCHEMA public'))
+            db.session.commit()
+            print("✅ All tables dropped successfully (CASCADE)")
         except Exception as e:
             print(f"❌ Error dropping tables: {e}")
-            return
+            db.session.rollback()
+            # Try the old way as fallback
+            try:
+                db.drop_all()
+                print("✅ All tables dropped successfully (fallback)")
+            except Exception as e2:
+                print(f"❌ Error with fallback: {e2}")
+                return
         
         print("\n🔨 Creating all tables...")
         try:

@@ -14,22 +14,28 @@ import { useMemo, type ReactNode } from 'react'
  * }
  */
 export function usePermissions() {
-  const { user } = useAuth()
+  const { user, permissions: contextPermissions } = useAuth()
 
   // Extract all permission keys from user's roles
   const permissions = useMemo(() => {
-    if (!user?.roles) return new Set<string>()
-    
     const permissionSet = new Set<string>()
     
-    user.roles.forEach(role => {
-      role.permissions?.forEach(permission => {
-        permissionSet.add(permission.module_key)
+    // First, try to get permissions from user.roles
+    if (user?.roles && Array.isArray(user.roles)) {
+      user.roles.forEach(role => {
+        role.permissions?.forEach((permission: any) => {
+          permissionSet.add(permission.module_key || permission.name)
+        })
       })
-    })
+    }
+    
+    // If no permissions from roles, use context permissions as fallback
+    if (permissionSet.size === 0 && contextPermissions && Array.isArray(contextPermissions)) {
+      contextPermissions.forEach(perm => permissionSet.add(perm))
+    }
     
     return permissionSet
-  }, [user?.roles])
+  }, [user?.roles, contextPermissions])
 
   /**
    * Check if user has a specific permission

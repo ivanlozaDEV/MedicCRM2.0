@@ -15,7 +15,7 @@ import {
 
 export default function PatientsPage() {
   const router = useRouter()
-  const { hasPermission } = usePermissions()
+  const { hasPermission, isLoading: permissionsLoading } = usePermissions()
   const [patients, setPatients] = useState<Patient[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -24,10 +24,10 @@ export default function PatientsPage() {
 
   // Check permission
   useEffect(() => {
-    if (!hasPermission('patients.view')) {
+    if (!permissionsLoading && !hasPermission('patients.view')) {
       router.push('/dashboard')
     }
-  }, [hasPermission, router])
+  }, [hasPermission, permissionsLoading, router])
 
   // Fetch patients
   useEffect(() => {
@@ -106,6 +106,17 @@ export default function PatientsPage() {
 
   if (!hasPermission('patients.view')) {
     return null
+  }
+
+  if (permissionsLoading || loading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          <p className="mt-4 text-sm text-gray-500">Cargando permisos...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
