@@ -15,6 +15,7 @@ import {
   HeartIcon,
   CalendarIcon
 } from '@heroicons/react/24/outline'
+import EmergencyContactsTab from '@/components/patients/EmergencyContactsTab'
 
 type TabType = 'general' | 'contacts' | 'allergies' | 'medications' | 'conditions'
 
@@ -215,9 +216,7 @@ export default function PatientDetailPage() {
           <GeneralInfoTab patient={patient} isEditing={isEditing} onUpdate={fetchPatient} />
         )}
         {activeTab === 'contacts' && (
-          <div className="text-center py-12 text-gray-500">
-            Tab de Contactos de Emergencia (próximamente)
-          </div>
+          <EmergencyContactsTab patientId={patientId} />
         )}
         {activeTab === 'allergies' && (
           <div className="text-center py-12 text-gray-500">

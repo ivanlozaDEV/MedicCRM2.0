@@ -69,6 +69,15 @@ export const patientContactService = {
   },
 
   /**
+   * Get all contacts for a patient (alias)
+   */
+  getByPatientId: async (
+    patientId: number
+  ): Promise<{ success: boolean; data: PatientContact[]; count: number; error?: string }> => {
+    return patientContactService.getAll(patientId);
+  },
+
+  /**
    * Get a single contact by ID
    */
   getById: async (
