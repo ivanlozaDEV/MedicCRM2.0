@@ -109,6 +109,7 @@ export default function DashboardPage() {
     // Sistema
     canViewReports: hasPermission('reports.view'),
     canViewSettings: hasPermission('settings.view'),
+    canViewAuditLogs: hasPermission('audit_logs.view'),
   };
 
   // Estadísticas organizadas por sección
@@ -364,8 +365,8 @@ export default function DashboardPage() {
 
       {/* Dashboard Sections - Clinical & Administrative */}
       <div className="space-y-6">
-        {/* Sección Clínica */}
-        {sections.clinical && (
+        {/* Sección Clínica - Solo mostrar si tiene contenido */}
+        {sections.clinical && (visibleClinicalStats.length > 0 || clinicalActions.filter(action => action.permission).length > 0) && (
           <div className="bg-white rounded-xl border border-gray-200 p-6">
             <div className="flex items-center space-x-2 mb-6">
               <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
@@ -430,8 +431,8 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {/* Sección Administrativa */}
-          {sections.administrative && (
+          {/* Sección Administrativa - Solo mostrar si tiene contenido */}
+          {sections.administrative && (visibleAdministrativeStats.length > 0 || administrativeActions.filter(action => action.permission).length > 0 || userPermissions.canViewAuditLogs) && (
             <div className="bg-white rounded-xl border border-gray-200 p-6">
               <div className="flex items-center space-x-2 mb-6">
                 <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center">
@@ -442,7 +443,7 @@ export default function DashboardPage() {
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Contenido Principal */}
-                <div className="lg:col-span-2 space-y-6">
+                <div className={`${userPermissions.canViewAuditLogs ? 'lg:col-span-2' : 'lg:col-span-3'} space-y-6`}>
                   {/* Estadísticas Administrativas */}
                   {visibleAdministrativeStats.length > 0 && (
                     <div>
@@ -498,41 +499,43 @@ export default function DashboardPage() {
                   )}
                 </div>
 
-                {/* Actividad Reciente */}
-                <div className="lg:col-span-1">
-                  <div className="bg-gradient-to-br from-purple-50 to-white rounded-lg border border-purple-200 p-5">
-                    <h3 className="text-sm font-semibold text-gray-900 mb-4 flex items-center">
-                      <svg className="w-4 h-4 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      Actividad Reciente
-                    </h3>
-                    <div className="space-y-3">
-                      {recentActivity.map((activity, index) => (
-                        <div key={index} className="flex items-start space-x-2">
-                          <div className="w-7 h-7 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
-                            <span className="text-[10px] font-medium text-purple-600">
-                              {activity.avatar}
-                            </span>
+                {/* Actividad Reciente - Solo si tiene permiso */}
+                {userPermissions.canViewAuditLogs && (
+                  <div className="lg:col-span-1">
+                    <div className="bg-gradient-to-br from-purple-50 to-white rounded-lg border border-purple-200 p-5">
+                      <h3 className="text-sm font-semibold text-gray-900 mb-4 flex items-center">
+                        <svg className="w-4 h-4 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Actividad Reciente
+                      </h3>
+                      <div className="space-y-3">
+                        {recentActivity.map((activity, index) => (
+                          <div key={index} className="flex items-start space-x-2">
+                            <div className="w-7 h-7 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
+                              <span className="text-[10px] font-medium text-purple-600">
+                                {activity.avatar}
+                              </span>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs text-gray-900">
+                                <span className="font-medium">{activity.user}</span>{' '}
+                                <span className="text-gray-600">{activity.action}</span>
+                              </p>
+                              <p className="text-[10px] text-gray-500 mt-0.5">{activity.time}</p>
+                            </div>
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs text-gray-900">
-                              <span className="font-medium">{activity.user}</span>{' '}
-                              <span className="text-gray-600">{activity.action}</span>
-                            </p>
-                            <p className="text-[10px] text-gray-500 mt-0.5">{activity.time}</p>
-                          </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
+                      <Link 
+                        href="/dashboard/activity" 
+                        className="block text-center text-xs text-purple-600 font-medium mt-4 pt-3 border-t border-purple-200 hover:underline transition-colors"
+                      >
+                        Ver toda la actividad →
+                      </Link>
                     </div>
-                    <Link 
-                      href="/dashboard/activity" 
-                      className="block text-center text-xs text-purple-600 font-medium mt-4 pt-3 border-t border-purple-200 hover:underline transition-colors"
-                    >
-                      Ver toda la actividad →
-                    </Link>
                   </div>
-                </div>
+                )}
               </div>
             </div>
           )}

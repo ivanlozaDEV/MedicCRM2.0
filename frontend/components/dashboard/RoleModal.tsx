@@ -180,7 +180,9 @@ export default function RoleModal({ isOpen, onClose, onSuccess, role, mode }: Ro
         name: formData.name,
         description: formData.description,
         color: formData.color,
-        is_system: false, // Los roles creados manualmente nunca son del sistema
+        // Solo enviar is_system al crear (siempre false para roles custom)
+        // NO enviar al editar para evitar conflictos con roles del sistema
+        ...(mode === 'create' && { is_system: false }),
       };
 
       let response;
