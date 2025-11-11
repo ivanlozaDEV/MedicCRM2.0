@@ -19,6 +19,7 @@ from routes import (
     user_specialties_bp,
     patients_bp,
     patient_contacts_bp,
+    allergies_bp,
     patient_allergies_bp,
     patient_medications_bp,
     patient_conditions_bp
@@ -42,7 +43,7 @@ from routes import (
     roles_bp, permissions_bp, specialties_bp,
     role_permissions_bp, user_specialties_bp, webhooks_bp,
     patients_bp, patient_contacts_bp,
-    patient_allergies_bp, patient_medications_bp, patient_conditions_bp
+    allergies_bp, patient_allergies_bp, patient_medications_bp, patient_conditions_bp
 )
 
 app.register_blueprint(auth_bp)
@@ -57,6 +58,7 @@ app.register_blueprint(user_specialties_bp)
 app.register_blueprint(webhooks_bp)
 app.register_blueprint(patients_bp)
 app.register_blueprint(patient_contacts_bp)
+app.register_blueprint(allergies_bp)
 app.register_blueprint(patient_allergies_bp)
 app.register_blueprint(patient_medications_bp)
 app.register_blueprint(patient_conditions_bp)
@@ -75,6 +77,13 @@ with app.app_context():
     print("  - /api/specialties")
     print("  - /api/role-permissions")
     print("  - /api/user-specialties")
+    print("  - /api/webhooks")
+    print("  - /api/patients")
+    print("  - /api/patient-contacts")
+    print("  - /api/allergies")
+    print("  - /api/patient-allergies")
+    print("  - /api/patient-medications")
+    print("  - /api/patient-conditions")
 
 # Health check endpoint
 @app.route('/api/health', methods=['GET'])

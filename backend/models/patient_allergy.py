@@ -49,12 +49,21 @@ class PatientAllergy(db.Model):
     # Additional Information
     notes = db.Column(db.Text)
     
+    # Foreign key to Allergy catalog (optional)
+    allergy_id = db.Column(
+        db.Integer,
+        db.ForeignKey('allergies.id', ondelete='SET NULL'),
+        nullable=True,
+        index=True
+    )
+    
     # Timestamps
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
     patient = db.relationship('Patient', backref=db.backref('allergies', lazy='dynamic', cascade='all, delete-orphan'))
+    allergy = db.relationship('Allergy', back_populates='patient_allergies')
     
     def __repr__(self):
         return f'<PatientAllergy {self.allergen} for Patient {self.patient_id}>'
