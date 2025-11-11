@@ -59,7 +59,7 @@ export interface MedicationCatalogFormData {
 }
 
 class MedicationService {
-  private readonly basePath = '/api/medications';
+  private readonly basePath = '/medications';
 
   /**
    * Get all medications from catalog with optional filters

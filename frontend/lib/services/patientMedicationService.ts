@@ -60,14 +60,14 @@ export const patientMedicationService = {
    * Get all medications for a patient
    */
   getAll: async (patientId: number): Promise<{ success: boolean; data: PatientMedication[]; count: number; error?: string }> => {
-    return apiRequest(`/api/patient-medications?patient_id=${patientId}`, { method: 'GET' });
+    return apiRequest(`/patient-medications?patient_id=${patientId}`, { method: 'GET' });
   },
 
   /**
    * Get a single medication by ID
    */
   getById: async (medicationId: number): Promise<{ success: boolean; data: PatientMedication; error?: string }> => {
-    return apiRequest(`/api/patient-medications/${medicationId}`, { method: 'GET' });
+    return apiRequest(`/patient-medications/${medicationId}`, { method: 'GET' });
   },
 
   /**
@@ -77,7 +77,7 @@ export const patientMedicationService = {
     patientId: number,
     medicationData: Omit<CreatePatientMedicationData, 'patient_id'>
   ): Promise<{ success: boolean; data: PatientMedication; message?: string; error?: string }> => {
-    return apiRequest('/api/patient-medications', {
+    return apiRequest('/patient-medications', {
       method: 'POST',
       body: JSON.stringify({ ...medicationData, patient_id: patientId }),
     });
@@ -91,7 +91,7 @@ export const patientMedicationService = {
     medicationId: number,
     medicationData: UpdatePatientMedicationData
   ): Promise<{ success: boolean; data: PatientMedication; message?: string; error?: string }> => {
-    return apiRequest(`/api/patient-medications/${medicationId}`, {
+    return apiRequest(`/patient-medications/${medicationId}`, {
       method: 'PUT',
       body: JSON.stringify(medicationData),
     });
@@ -104,6 +104,6 @@ export const patientMedicationService = {
     patientId: number,
     medicationId: number
   ): Promise<{ success: boolean; message?: string; error?: string }> => {
-    return apiRequest(`/api/patient-medications/${medicationId}`, { method: 'DELETE' });
+    return apiRequest(`/patient-medications/${medicationId}`, { method: 'DELETE' });
   },
 };
