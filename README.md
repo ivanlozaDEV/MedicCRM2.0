@@ -1,36 +1,41 @@
-# DoctorCRM 2.0
+# DoctorCRM 2.0 🏥
 
-Sistema completo de gestión médica (CRM) con funcionalidades de multi-tenancy, gestión de usuarios, roles, permisos, especialidades médicas y suscripciones. Construido con Flask (backend) y Next.js (frontend).
+Sistema completo de gestión médica (CRM/EHR) con funcionalidades de multi-tenancy, gestión de usuarios, roles, permisos, especialidades médicas, pacientes, historias clínicas y suscripciones. Construido con **Flask** (backend) y **Next.js** (frontend) siguiendo estándares **FHIR R4**.
 
 ## 🚀 Stack Tecnológico
 
 ### Backend
 - **Python**: 3.13.2
 - **Framework**: Flask 3.1.0
-- **Base de datos**: PostgreSQL 14.19 (database: `doctorcrm2`)
+- **Base de datos**: PostgreSQL 14.19 (database: `doctorcrm2.0`)
 - **Autenticación**: JWT (Flask-JWT-Extended 4.6.0)
 - **ORM**: SQLAlchemy (Flask-SQLAlchemy 3.1.1)
 - **CORS**: Flask-CORS 5.0.0
 - **Migraciones**: Flask-Migrate 4.0.5
 - **Puerto**: 5001
 - **Arquitectura**: Flask Blueprints (modular)
+- **Estándares**: FHIR R4 para datos clínicos
 
 ### Frontend
-- **Framework**: Next.js 16.0.1
+- **Framework**: Next.js 16.0.1 (App Router)
 - **React**: 19.2.0
 - **TypeScript**: ^5
 - **Estilos**: TailwindCSS ^4
+- **Iconos**: Heroicons
 - **Puerto**: 3000
 - **API Layer**: TypeScript Services con type-safety
+- **Autenticación**: Context API + JWT
+- **Permisos**: Sistema granular con guards
 
 ## 📊 Arquitectura de la Base de Datos
 
-### Modelos (8 tablas principales)
+### Modelos Core (8 tablas)
 
 1. **Organization** (`backend/models/organization.py`)
    - Multi-tenancy: organizaciones independientes
-   - Campos: nombre, slug, configuración, branding, dirección
+   - Campos: nombre, slug, configuración, branding, dirección, `color_palette`
    - Estados: activo/inactivo
+   - Paletas de color: 12 opciones predefinidas
 
 2. **User** (`backend/models/user.py`)
    - Usuarios del sistema con autenticación
@@ -41,7 +46,8 @@ Sistema completo de gestión médica (CRM) con funcionalidades de multi-tenancy,
 3. **Subscription** (`backend/models/subscription.py`)
    - Integración con LemonSqueezy
    - Planes: Basic, Professional, Enterprise
-   - Control de límites y estados
+   - Control de límites y estados (active, cancelled, expired)
+   - Webhooks para sincronización automática
 
 4. **Role** (`backend/models/role.py`)
    - Sistema de roles con flag `is_system`
@@ -50,14 +56,16 @@ Sistema completo de gestión médica (CRM) con funcionalidades de multi-tenancy,
    - Relación con Permissions (muchos-a-muchos vía RolePermission)
 
 5. **Permission** (`backend/models/permission.py`)
-   - Permisos dinámicos (no hardcoded)
+   - **120 permisos** dinámicos (no hardcoded)
    - Campos: `module_key`, `display_name`, `category`
-   - Creados y gestionados por administradores
+   - 19 categorías: users, roles, permissions, specialties, patients, allergies, medications, etc.
+   - Creados automáticamente con `seed_permissions.py`
 
 6. **Specialty** (`backend/models/specialty.py`)
-   - Especialidades médicas
-   - 10 especialidades por defecto
-   - Campos: `default_appointment_duration`, `default_color`
+   - **39 especialidades médicas** con iconos
+   - Campos: `default_appointment_duration`, `default_color`, `icon`
+   - Especialidades: Cardiología, Pediatría, Dermatología, etc.
+   - Creadas automáticamente con `seed_default_specialties.py`
 
 7. **RolePermission** (`backend/models/role_permission.py`)
    - Tabla relacional Role ↔ Permission
@@ -67,11 +75,103 @@ Sistema completo de gestión médica (CRM) con funcionalidades de multi-tenancy,
    - Tabla relacional User ↔ Specialty
    - Flag `is_primary` para especialidad principal
 
-## 🔌 API REST (60 Endpoints)
+### Modelos Clínicos FHIR (10 tablas)
+
+9. **Patient** (`backend/models/patient.py`)
+   - **Cumple FHIR R4 Patient Resource**
+   - Identificadores: MRN (Medical Record Number), SSN, License
+   - Campos: nombres, género, fecha nacimiento, contacto
+   - Relación con Organization
+   - Soporte para múltiples direcciones y telecomunicaciones
+
+10. **PatientContact** (`backend/models/patient_contact.py`)
+    - **Cumple FHIR R4 RelatedPerson**
+    - Contactos de emergencia del paciente
+    - Relaciones: Emergency Contact, Parent, Spouse, Guardian, etc.
+    - Campos: nombre, relación, teléfonos, dirección
+
+11. **Allergy** (`backend/models/allergy.py`)
+    - **Catálogo global de alergenos**
+    - **22 alergias** precargadas (medicamentos, alimentos, ambientales)
+    - Códigos SNOMED CT
+    - Categorías: medication, food, environment, biologic
+    - Severidad: mild, moderate, severe
+    - Creadas con `seed_allergies.py`
+
+12. **PatientAllergy** (`backend/models/patient_allergy.py`)
+    - **Cumple FHIR R4 AllergyIntolerance**
+    - Registro de alergias del paciente
+    - FK opcional a catálogo `Allergy`
+    - Permite alergias personalizadas (no en catálogo)
+    - Campos: allergen, reacciones, severidad, onset_date, notas
+
+13. **Medication** (`backend/models/medication.py`)
+    - **Catálogo global de medicamentos**
+    - **22 medicamentos** precargados
+    - Códigos estándar: RxNorm, NDC, ATC
+    - 11 categorías: antibiotic, analgesic, antihypertensive, etc.
+    - Información típica: dosis, vías, frecuencias
+    - `controlled_substance` (Schedule I-V)
+    - Creados con `seed_medications.py`
+
+14. **PatientMedication** (`backend/models/patient_medication.py`)
+    - **Cumple FHIR R4 MedicationStatement**
+    - Registro de medicamentos del paciente
+    - FK opcional a catálogo `Medication`
+    - Permite medicamentos personalizados
+    - Estados: active, completed, stopped, on-hold
+    - Campos: dosage, route, frequency, prescriber, pharmacy, refills
+    - Flag `is_prn` (PRN - según necesidad)
+
+15. **PatientCondition** (`backend/models/patient_condition.py`)
+    - **Cumple FHIR R4 Condition**
+    - Condiciones médicas/diagnósticos del paciente
+    - Códigos ICD-10/SNOMED CT
+    - Estados: active, recurrence, relapse, inactive, remission, resolved
+    - Severidad: mild, moderate, severe
+    - Campos: onset, abatement, stage, evidence
+
+### Relaciones Clave
+
+```
+Organization
+  ├─── Users (1:N)
+  ├─── Patients (1:N)
+  └─── Subscription (1:1)
+
+User
+  ├─── UserRoles (N:M via user_role)
+  └─── UserSpecialties (N:M via user_specialty)
+
+Role
+  └─── RolePermissions (N:M via role_permission)
+
+Patient
+  ├─── PatientContacts (1:N)
+  ├─── PatientAllergies (1:N)
+  ├─── PatientMedications (1:N)
+  └─── PatientConditions (1:N)
+
+Allergy (Catalog)
+  └─── PatientAllergies (1:N, optional)
+
+Medication (Catalog)
+  └─── PatientMedications (1:N, optional)
+```
+
+## 🔌 API REST (100+ Endpoints)
 
 ### Blueprints Organizados por Módulo
 
-#### 1. Organizations (`/api/organizations`) - 8 endpoints
+
+#### 1. **Auth** (`/api/auth`) - 3 endpoints
+```
+POST   /api/auth/register              # Registro de usuario
+POST   /api/auth/login                 # Login con JWT
+POST   /api/auth/me                    # Obtener usuario actual (protegido)
+```
+
+#### 2. **Organizations** (`/api/organizations`) - 8 endpoints
 ```
 GET    /api/organizations              # Listar organizaciones
 GET    /api/organizations/:id          # Obtener por ID
@@ -83,7 +183,7 @@ POST   /api/organizations/:id/activate # Activar organización
 POST   /api/organizations/:id/deactivate # Desactivar organización
 ```
 
-#### 2. Users (`/api/users`) - 10 endpoints
+#### 3. **Users** (`/api/users`) - 10 endpoints
 ```
 GET    /api/users                      # Listar usuarios
 GET    /api/users/:id                  # Obtener por ID
@@ -97,7 +197,8 @@ POST   /api/users/:id/reset-password   # Reset contraseña
 POST   /api/users/:id/change-password  # Cambiar contraseña
 ```
 
-#### 3. Subscriptions (`/api/subscriptions`) - 7 endpoints
+
+#### 4. **Subscriptions** (`/api/subscriptions`) - 7 endpoints
 ```
 GET    /api/subscriptions              # Listar suscripciones
 GET    /api/subscriptions/:id          # Obtener por ID
@@ -108,7 +209,12 @@ POST   /api/subscriptions/:id/cancel   # Cancelar suscripción
 POST   /api/subscriptions/:id/renew    # Renovar suscripción
 ```
 
-#### 4. Roles (`/api/roles`) - 6 endpoints
+#### 5. **Webhooks** (`/api/webhooks`) - 1 endpoint
+```
+POST   /api/webhooks/lemonsqueezy      # Webhook LemonSqueezy (signature validation)
+```
+
+#### 6. **Roles** (`/api/roles`) - 6 endpoints
 ```
 GET    /api/roles                      # Listar roles
 GET    /api/roles/:id                  # Obtener por ID
@@ -118,7 +224,7 @@ DELETE /api/roles/:id                  # Eliminar rol (solo custom)
 POST   /api/roles/init-system-roles    # Inicializar 5 roles del sistema
 ```
 
-#### 5. Permissions (`/api/permissions`) - 7 endpoints
+#### 7. **Permissions** (`/api/permissions`) - 7 endpoints
 ```
 GET    /api/permissions                # Listar permisos
 GET    /api/permissions/:id            # Obtener por ID
@@ -129,7 +235,7 @@ GET    /api/permissions/grouped        # Permisos agrupados por categoría
 GET    /api/permissions/categories     # Lista de categorías
 ```
 
-#### 6. Specialties (`/api/specialties`) - 9 endpoints
+#### 8. **Specialties** (`/api/specialties`) - 9 endpoints
 ```
 GET    /api/specialties                # Listar especialidades
 GET    /api/specialties/:id            # Obtener por ID
@@ -139,10 +245,10 @@ DELETE /api/specialties/:id            # Eliminar especialidad
 GET    /api/specialties/active         # Solo especialidades activas
 POST   /api/specialties/:id/activate   # Activar especialidad
 POST   /api/specialties/:id/deactivate # Desactivar especialidad
-POST   /api/specialties/init-defaults  # Inicializar 10 especialidades
+POST   /api/specialties/init-defaults  # Inicializar 39 especialidades
 ```
 
-#### 7. Role-Permissions (`/api/role-permissions`) - 6 endpoints
+#### 9. **Role-Permissions** (`/api/role-permissions`) - 6 endpoints
 ```
 GET    /api/role-permissions/role/:role_id           # Permisos de un rol
 GET    /api/role-permissions/permission/:permission_id # Roles con permiso
@@ -152,7 +258,7 @@ POST   /api/role-permissions/replace                  # Reemplazar todos
 POST   /api/role-permissions/revoke                   # Revocar permiso
 ```
 
-#### 8. User-Specialties (`/api/user-specialties`) - 7 endpoints
+#### 10. **User-Specialties** (`/api/user-specialties`) - 7 endpoints
 ```
 GET    /api/user-specialties/user/:user_id              # Especialidades de usuario
 GET    /api/user-specialties/specialty/:specialty_id/users # Usuarios con especialidad
@@ -163,84 +269,367 @@ POST   /api/user-specialties/set-primary                # Establecer primaria
 POST   /api/user-specialties/revoke                     # Revocar especialidad
 ```
 
-### Formato de Respuesta Estándar
-```typescript
-{
-  success: boolean;
-  data?: any;
-  message?: string;
-  error?: string;
-  count?: number; // Para listas
-}
+### APIs Clínicas (FHIR)
+
+#### 11. **Patients** (`/api/patients`) - 6 endpoints
+```
+GET    /api/patients                   # Listar pacientes (filtros: search, gender, org)
+GET    /api/patients/:id               # Obtener por ID
+POST   /api/patients                   # Crear paciente (FHIR Patient)
+PUT    /api/patients/:id               # Actualizar paciente
+DELETE /api/patients/:id               # Eliminar paciente (soft delete)
+GET    /api/patients/search            # Búsqueda por nombre/MRN
 ```
 
-## 🎨 Frontend - TypeScript Services (8 archivos)
+#### 12. **Patient Contacts** (`/api/patient-contacts`) - 5 endpoints
+```
+GET    /api/patient-contacts?patient_id=X  # Contactos de paciente
+GET    /api/patient-contacts/:id           # Obtener por ID
+POST   /api/patient-contacts               # Crear contacto emergencia (FHIR RelatedPerson)
+PUT    /api/patient-contacts/:id           # Actualizar contacto
+DELETE /api/patient-contacts/:id           # Eliminar contacto
+```
+
+#### 13. **Allergies Catalog** (`/api/allergies`) - 6 endpoints
+```
+GET    /api/allergies                  # Catálogo de alergenos (22 precargados)
+GET    /api/allergies/:id              # Obtener por ID
+POST   /api/allergies                  # Crear alergia en catálogo
+PUT    /api/allergies/:id              # Actualizar alergia
+DELETE /api/allergies/:id              # Eliminar alergia
+GET    /api/allergies/categories       # Categorías (medication, food, environment)
+```
+
+#### 14. **Patient Allergies** (`/api/patient-allergies`) - 5 endpoints
+```
+GET    /api/patient-allergies?patient_id=X # Alergias del paciente
+GET    /api/patient-allergies/:id          # Obtener por ID
+POST   /api/patient-allergies              # Registrar alergia (FHIR AllergyIntolerance)
+PUT    /api/patient-allergies/:id          # Actualizar alergia
+DELETE /api/patient-allergies/:id          # Eliminar alergia
+```
+
+#### 15. **Medications Catalog** (`/api/medications`) - 6 endpoints
+```
+GET    /api/medications                # Catálogo de medicamentos (22 precargados)
+GET    /api/medications/:id            # Obtener por ID
+POST   /api/medications                # Crear medicamento en catálogo
+PUT    /api/medications/:id            # Actualizar medicamento
+DELETE /api/medications/:id            # Eliminar medicamento
+GET    /api/medications/categories     # Categorías (antibiotic, analgesic, etc.)
+```
+
+#### 16. **Patient Medications** (`/api/patient-medications`) - 5 endpoints
+```
+GET    /api/patient-medications?patient_id=X # Medicamentos del paciente
+GET    /api/patient-medications/:id          # Obtener por ID
+POST   /api/patient-medications              # Registrar medicamento (FHIR MedicationStatement)
+PUT    /api/patient-medications/:id          # Actualizar medicamento
+DELETE /api/patient-medications/:id          # Eliminar medicamento
+```
+
+#### 17. **Patient Conditions** (`/api/patient-conditions`) - 5 endpoints
+```
+GET    /api/patient-conditions?patient_id=X  # Condiciones del paciente
+GET    /api/patient-conditions/:id           # Obtener por ID
+POST   /api/patient-conditions               # Registrar condición (FHIR Condition)
+PUT    /api/patient-conditions/:id           # Actualizar condición
+DELETE /api/patient-conditions/:id           # Eliminar condición
+```
+
+
+## 🎨 Frontend - TypeScript Services (15+ archivos)
 
 Capa de servicios con type-safety completo en `frontend/lib/services/`:
 
-### Servicios Disponibles
+### Servicios Core
 
-1. **organizationService.ts**
+1. **authService.ts**
+   - Interface: `LoginCredentials`, `RegisterData`, `AuthResponse`
+   - Métodos: `login()`, `register()`, `getCurrentUser()`, `logout()`
+
+2. **organizationService.ts**
    - Interface: `Organization`, `OrganizationStats`
    - Métodos: CRUD + `getStats()`, `activate()`, `deactivate()`
 
-2. **userService.ts**
+3. **userService.ts**
    - Interface: `User`, `CreateUserData`
    - Métodos: CRUD + `validateUsername()`, `validateEmail()`, `resetPassword()`
 
-3. **subscriptionService.ts**
+4. **subscriptionService.ts**
    - Interface: `Subscription`
-   - Métodos: CRUD + `cancel()`, `renew()`
+   - Métodos: CRUD + `cancel()`, `renew()`, `getCurrentPlan()`
 
-4. **roleService.ts**
+5. **roleService.ts**
    - Interface: `Role`
    - Métodos: CRUD + `initSystemRoles()`
 
-5. **permissionService.ts**
+6. **permissionService.ts**
    - Interface: `Permission`, `PermissionsGrouped`
    - Métodos: CRUD + `getGrouped()`, `getCategories()`
 
-6. **specialtyService.ts**
+7. **specialtyService.ts**
    - Interface: `Specialty`
    - Métodos: CRUD + `getActive()`, `activate()`, `deactivate()`, `initDefaults()`
 
-7. **rolePermissionService.ts**
+8. **rolePermissionService.ts**
    - Interface: `RolePermission`
    - Métodos: `assign()`, `assignMultiple()`, `replace()`, `revoke()`
 
-8. **userSpecialtyService.ts**
+9. **userSpecialtyService.ts**
    - Interface: `UserSpecialty`
    - Métodos: `assign()`, `assignMultiple()`, `replace()`, `setPrimary()`, `revoke()`
+
+### Servicios Clínicos
+
+10. **patientService.ts**
+    - Interface: `Patient`, `CreatePatientData`
+    - Métodos: CRUD + `search()`, `getByOrganization()`
+
+11. **patientContactService.ts**
+    - Interface: `PatientContact`, `CreateContactData`
+    - Métodos: CRUD (todas requieren `patient_id`)
+
+12. **allergyService.ts** (Catálogo)
+    - Interface: `AllergyCatalog`
+    - Métodos: `getAll()`, `getById()`, `create()`, `update()`, `delete()`, `getCategories()`
+
+13. **patientAllergyService.ts**
+    - Interface: `PatientAllergy`, `CreatePatientAllergyData`
+    - Métodos: CRUD con soporte para catálogo o alergias personalizadas
+
+14. **medicationService.ts** (Catálogo)
+    - Interface: `MedicationCatalog`
+    - Métodos: `getAll()`, `getById()`, `create()`, `update()`, `delete()`, `getCategories()`, `search()`
+
+15. **patientMedicationService.ts**
+    - Interface: `PatientMedication`, `CreatePatientMedicationData`
+    - Métodos: CRUD con soporte para catálogo o medicamentos personalizados
+
+16. **patientConditionService.ts**
+    - Interface: `PatientCondition`, `CreateConditionData`
+    - Métodos: CRUD para condiciones médicas
 
 ### Uso de Servicios
 ```typescript
 // Importar desde index centralizado
-import { userService, roleService } from '@/lib/services';
+import { 
+  userService, 
+  roleService, 
+  patientService,
+  medicationService,
+  patientMedicationService 
+} from '@/lib/services';
 
-// Ejemplo: Crear usuario
-const newUser = await userService.create({
-  username: 'doctor123',
-  email: 'doctor@example.com',
+// Ejemplo: Crear paciente
+const newPatient = await patientService.create({
   first_name: 'Juan',
   last_name: 'Pérez',
-  medical_license: 'MED-12345',
+  gender: 'male',
+  birth_date: '1985-05-15',
   organization_id: 1
 });
 
-// Ejemplo: Inicializar roles del sistema
-await roleService.initSystemRoles({ organization_id: 1 });
+// Ejemplo: Buscar medicamento en catálogo
+const medications = await medicationService.search('amoxicillin');
+
+// Ejemplo: Registrar medicamento del paciente
+await patientMedicationService.create(patientId, {
+  medication_id: 1,  // Del catálogo
+  medication_name: 'Amoxicillin 500mg',
+  status: 'active',
+  dose: '500 mg',
+  route: 'oral',
+  frequency: 'every 8 hours'
+});
+```
+
+## 🎯 Features Clave
+
+### 1. Sistema de Permisos Granular
+- **120 permisos** organizados en 19 categorías
+- Guards de permisos en componentes: `<PermissionGuard permission="patients.create">`
+- Hook personalizado: `usePermissions()` para verificación programática
+- Permisos por módulo: users, roles, patients, allergies, medications, conditions, etc.
+
+### 2. Sistema Multi-Tenant
+- Organizaciones completamente independientes
+- Datos aislados por `organization_id`
+- 12 paletas de color personalizables por organización
+- Gestión de límites por plan de suscripción
+
+### 3. Gestión de Pacientes FHIR
+- **Vista de lista** con búsqueda y filtros
+- **Vista detallada** con sistema de tabs:
+  - **General**: Información demográfica
+  - **Contactos**: Contactos de emergencia (FHIR RelatedPerson)
+  - **Alergias**: AllergyIntolerance con catálogo y fuzzy search
+  - **Medicamentos**: MedicationStatement con catálogo y fuzzy search
+  - **Condiciones**: Próximamente
+
+### 4. Catálogos Inteligentes
+- **22 alergias** precargadas (SNOMED CT)
+- **22 medicamentos** precargados (RxNorm, NDC, ATC)
+- **Fuzzy search** para autocompletado inteligente
+- Permite agregar elementos personalizados no en catálogo
+- Información contextual: códigos, categorías, severidad, usos comunes
+
+### 5. UI/UX Avanzada
+- **Fuzzy search** con algoritmo custom (exact + character-order matching)
+- **Modales con backdrop blur** efecto glassmorphism
+- **Badges de estado** con iconos y colores semánticos
+- **Tarjetas de información** del catálogo con códigos estándar
+- **Sistema de tabs** para organización de información
+- **Responsive design** completo con Tailwind CSS
+
+### 6. Integración de Suscripciones
+- **LemonSqueezy** como procesador de pagos
+- Webhooks para sincronización automática
+- 3 planes: Basic, Professional, Enterprise
+- Límites por plan (usuarios, pacientes, almacenamiento)
+- Upgrade/downgrade con validación de límites
+
+## 🗂️ Estructura del Proyecto
+
+```
+DoctorCRM2.0/
+├── backend/
+│   ├── app.py                          # Aplicación Flask principal
+│   ├── config/
+│   │   ├── lemonsqueezy.py            # Config LemonSqueezy
+│   │   └── subscription_plans.py       # Definición de planes
+│   ├── lib/
+│   │   └── lemonsqueezy_service.py    # Servicio LemonSqueezy
+│   ├── models/                         # 15 modelos SQLAlchemy
+│   │   ├── organization.py
+│   │   ├── user.py
+│   │   ├── subscription.py
+│   │   ├── role.py
+│   │   ├── permission.py
+│   │   ├── specialty.py
+│   │   ├── patient.py
+│   │   ├── patient_contact.py
+│   │   ├── allergy.py                 # Catálogo
+│   │   ├── patient_allergy.py
+│   │   ├── medication.py              # Catálogo
+│   │   ├── patient_medication.py
+│   │   ├── patient_condition.py
+│   │   └── [relationship tables]
+│   ├── routes/                         # 17 blueprints
+│   │   ├── auth.py
+│   │   ├── organizations.py
+│   │   ├── users.py
+│   │   ├── subscriptions.py
+│   │   ├── webhooks.py
+│   │   ├── roles.py
+│   │   ├── permissions.py
+│   │   ├── specialties.py
+│   │   ├── patients.py
+│   │   ├── patient_contacts.py
+│   │   ├── allergies.py
+│   │   ├── patient_allergies.py
+│   │   ├── medications.py
+│   │   ├── patient_medications.py
+│   │   ├── patient_conditions.py
+│   │   └── [relationship routes]
+│   ├── migrations/                     # Migraciones DB
+│   ├── seed_permissions.py            # 120 permisos
+│   ├── seed_default_specialties.py    # 39 especialidades
+│   ├── seed_allergies.py              # 22 alergias
+│   ├── seed_medications.py            # 22 medicamentos
+│   ├── reset_db.py                    # Reset completo DB
+│   └── requirements.txt
+│
+├── frontend/
+│   ├── app/
+│   │   ├── page.tsx                   # Landing page
+│   │   ├── login/page.tsx
+│   │   ├── signup/page.tsx
+│   │   └── dashboard/
+│   │       ├── page.tsx               # Dashboard con stats por permiso
+│   │       ├── patients/
+│   │       │   ├── page.tsx           # Lista de pacientes
+│   │       │   ├── new/page.tsx       # Crear paciente
+│   │       │   └── [id]/page.tsx      # Vista detallada con tabs
+│   │       ├── team/page.tsx
+│   │       ├── roles/page.tsx
+│   │       ├── specialties/page.tsx
+│   │       ├── permissions/page.tsx
+│   │       ├── profile/page.tsx
+│   │       ├── organization/page.tsx
+│   │       └── subscription/page.tsx
+│   ├── components/
+│   │   ├── ProtectedRoute.tsx         # HOC para rutas protegidas
+│   │   ├── SubscriptionChangeModal.tsx
+│   │   ├── dashboard/
+│   │   │   ├── Sidebar.tsx            # Sidebar con permisos
+│   │   │   ├── TopNavbar.tsx
+│   │   │   ├── StatsCard.tsx
+│   │   │   ├── UserModal.tsx
+│   │   │   ├── RoleModal.tsx
+│   │   │   └── SpecialtyModal.tsx
+│   │   ├── patients/
+│   │   │   ├── AllergiesTab.tsx       # 859 líneas, fuzzy search
+│   │   │   ├── MedicationsTab.tsx     # 906 líneas, fuzzy search
+│   │   │   └── EmergencyContactsTab.tsx
+│   │   ├── landing/
+│   │   │   ├── Hero.tsx
+│   │   │   ├── Features.tsx
+│   │   │   ├── Pricing.tsx
+│   │   │   └── [otros componentes]
+│   │   └── icons/
+│   │       └── MedicalIcon.tsx
+│   ├── lib/
+│   │   ├── api.ts                     # Cliente API base
+│   │   ├── colorPalettes.ts           # 12 paletas
+│   │   ├── subscriptionPlans.ts       # Definición de planes
+│   │   ├── hooks/
+│   │   │   └── usePermissions.ts      # Hook de permisos
+│   │   └── services/                  # 16 servicios TypeScript
+│   │       ├── index.ts               # Export centralizado
+│   │       ├── authService.ts
+│   │       ├── organizationService.ts
+│   │       ├── userService.ts
+│   │       ├── subscriptionService.ts
+│   │       ├── roleService.ts
+│   │       ├── permissionService.ts
+│   │       ├── specialtyService.ts
+│   │       ├── patientService.ts
+│   │       ├── patientContactService.ts
+│   │       ├── allergyService.ts
+│   │       ├── patientAllergyService.ts
+│   │       ├── medicationService.ts
+│   │       ├── patientMedicationService.ts
+│   │       ├── patientConditionService.ts
+│   │       └── [relationship services]
+│   ├── contexts/
+│   │   └── AuthContext.tsx            # Context de autenticación
+│   ├── types/
+│   │   └── index.ts                   # TypeScript types
+│   ├── package.json
+│   └── tsconfig.json
+│
+└── README.md
+
 ```
 
 ## 📋 Requisitos Previos
 
 1. **Python 3.13.2** instalado
 2. **Node.js 18+** instalado
-3. **PostgreSQL** instalado y ejecutándose
-4. **Git** (opcional, para control de versiones)
+3. **PostgreSQL 14+** instalado y ejecutándose
+4. **Git** para control de versiones
 
-## 🔧 Configuración Inicial
+## 🔧 Instalación y Configuración
 
-### 1. Configurar Base de Datos PostgreSQL
+### 1. Clonar el Repositorio
+
+```bash
+git clone https://github.com/ivanlozaDEV/MedicCRM2.0.git
+cd MedicCRM2.0
+```
+
+### 2. Configurar Base de Datos PostgreSQL
 
 ```bash
 # Conectar a PostgreSQL
@@ -256,7 +645,7 @@ CREATE DATABASE doctorcrm2;
 \q
 ```
 
-### 2. Configurar Backend (Flask)
+### 3. Configurar Backend (Flask)
 
 ```bash
 # Navegar al directorio backend
@@ -271,53 +660,173 @@ source .venv/bin/activate  # En macOS/Linux
 
 # Instalar dependencias
 pip install -r requirements.txt
-
-# Verificar instalación
-pip list
 ```
 
-**Configuración de variables de entorno:**
-El archivo `.env` ya está configurado en `backend/.env`:
-
+**Variables de entorno** (`backend/.env`):
 ```env
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/doctorcrm
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/doctorcrm2.0
 DB_HOST=localhost
 DB_PORT=5432
-DB_NAME=doctorcrm
+DB_NAME=doctorcrm2.0
 DB_USER=postgres
 DB_PASSWORD=postgres
 FLASK_PORT=5001
+SECRET_KEY=tu-clave-secreta-aqui
+JWT_SECRET_KEY=tu-jwt-secret-aqui
 ```
 
-**⚠️ IMPORTANTE**: Cambia las claves secretas en producción:
-- `SECRET_KEY`
-- `JWT_SECRET_KEY`
+**⚠️ IMPORTANTE**: Cambia `SECRET_KEY` y `JWT_SECRET_KEY` en producción.
 
-### 3. Configurar Frontend (Next.js)
+### 4. Inicializar Base de Datos con Datos de Seed
+
+```bash
+# Desde backend/ con .venv activado
+python reset_db.py
+```
+
+Esto creará:
+- ✅ Todas las tablas (15 modelos)
+- ✅ **120 permisos** organizados en 19 categorías
+- ✅ **39 especialidades** médicas con iconos
+- ✅ **22 alergias** precargadas (SNOMED CT)
+- ✅ **22 medicamentos** precargados (RxNorm/NDC/ATC)
+- ✅ 5 roles del sistema (Super Admin, Admin, Doctor, Nurse, Receptionist)
+
+### 5. Configurar Frontend (Next.js)
 
 ```bash
 # Navegar al directorio frontend
-cd frontend
+cd ../frontend
 
-# Instalar dependencias (si aún no lo has hecho)
+# Instalar dependencias
 npm install
-
-# Verificar instalación
-npm list --depth=0
 ```
 
-**Configuración de variables de entorno:**
-El archivo `.env.local` ya está configurado en `frontend/.env.local`:
-
+**Variables de entorno** (`frontend/.env.local`):
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:5001/api
 ```
 
 ## 🚀 Ejecutar la Aplicación
 
-### Opción 1: Ejecutar Backend y Frontend por separado
+### Opción 1: Script de Inicio Rápido (Recomendado)
+
+```bash
+# Desde la raíz del proyecto
+chmod +x start.sh
+./start.sh
+```
+
+Esto ejecuta:
+- Backend en `http://localhost:5001`
+- Frontend en `http://localhost:3000`
+
+### Opción 2: Ejecutar Manualmente en Terminales Separadas
 
 #### Terminal 1 - Backend:
+```bash
+cd backend
+source .venv/bin/activate  # Activar entorno virtual
+python app.py
+```
+✅ Backend corriendo en `http://localhost:5001`
+
+#### Terminal 2 - Frontend:
+```bash
+cd frontend
+npm run dev
+```
+✅ Frontend corriendo en `http://localhost:3000`
+
+### Opción 3: Modo Desarrollo con Auto-reload
+
+```bash
+# Terminal 1 - Backend con auto-reload
+cd backend
+source .venv/bin/activate
+flask run --reload --port 5001
+
+# Terminal 2 - Frontend con auto-reload
+cd frontend
+npm run dev
+```
+
+## 🎬 Primeros Pasos
+
+### 1. Crear una Organización y Usuario
+
+```bash
+# Acceder a http://localhost:3000/signup
+
+# Crear cuenta:
+- Nombre de organización: "Mi Clínica"
+- Email: admin@miclinica.com
+- Contraseña: (tu contraseña segura)
+- Nombre: "Dr. Juan"
+- Apellido: "Pérez"
+```
+
+### 2. Asignar Rol y Permisos
+
+```bash
+# Desde backend/, con psql o script Python:
+cd backend
+source .venv/bin/activate
+python change_role_to_doctor.py  # Asigna rol Doctor con permisos completos
+```
+
+### 3. Explorar el Dashboard
+
+Accede a `http://localhost:3000/dashboard` y verás:
+- **Stats Cards** organizadas por categorías de permisos
+- **Sidebar** con módulos según tus permisos
+- **Secciones disponibles**: Pacientes, Team, Roles, Specialties, etc.
+
+### 4. Crear tu Primer Paciente
+
+1. Ve a **Dashboard → Pacientes → Agregar Paciente**
+2. Completa el formulario FHIR:
+   - Información demográfica
+   - Identificadores (MRN, SSN opcional)
+   - Contacto y dirección
+3. Guarda y explora los **tabs**:
+   - **Contactos**: Agrega contactos de emergencia
+   - **Alergias**: Usa fuzzy search para buscar en catálogo
+   - **Medicamentos**: Usa fuzzy search para buscar medicamentos
+   - **Condiciones**: Próximamente
+
+## 🔑 Usuarios de Prueba
+
+Después de ejecutar `reset_db.py` y crear tu primera organización, puedes crear usuarios con diferentes roles:
+
+```python
+# Ejemplo: Crear usuario Nurse
+from backend.models import User, Role
+from backend.app import db
+
+nurse_role = Role.query.filter_by(name='Nurse', is_system=True).first()
+user = User(
+    username='nurse1',
+    email='nurse@example.com',
+    first_name='María',
+    last_name='García',
+    organization_id=1  # Tu organización
+)
+user.set_password('password123')
+db.session.add(user)
+db.session.commit()
+
+# Asignar rol
+from backend.models.user_role import user_role
+db.session.execute(
+    user_role.insert().values(user_id=user.id, role_id=nurse_role.id)
+)
+db.session.commit()
+```
+
+## 📊 Datos Precargados
+
+### Permisos (120)
 ```bash
 cd backend
 source .venv/bin/activate
@@ -1188,42 +1697,166 @@ Repositorio: [github.com/ivanlozaDEV/MedicCRM2.0](https://github.com/ivanlozaDEV
 
 ## 🎉 Estado Actual del Proyecto
 
-### ✅ Completado (60% del proyecto)
-- ✅ Arquitectura backend completa
-- ✅ 8 modelos de base de datos
-- ✅ 60 endpoints API REST
-- ✅ Sistema de roles y permisos
-- ✅ Especialidades médicas
-- ✅ Servicios TypeScript frontend
-- ✅ Type-safety completo
 
-### 🔄 En Progreso (20%)
-- 🔄 Componentes UI React
-- 🔄 Sistema de autenticación frontend
-- 🔄 Dashboard y navegación
+## 📈 Estado del Proyecto
 
-### 📋 Próximamente (20%)
-- 📋 Gestión de pacientes
-- 📋 Sistema de citas
-- 📋 Calendario médico
-- 📋 Deployment
+### ✅ Completado (85%)
+
+#### Backend (100%)
+- ✅ **15 modelos** de base de datos con relaciones complejas
+- ✅ **100+ endpoints** API REST organizados en 17 blueprints
+- ✅ Sistema completo de **roles y permisos** (120 permisos, 19 categorías)
+- ✅ **39 especialidades** médicas con iconos
+- ✅ Integración con **LemonSqueezy** (webhooks, planes, límites)
+- ✅ **FHIR R4** compliance para datos clínicos
+- ✅ **Catálogos globales**: 22 alergias + 22 medicamentos
+- ✅ Sistema de **seeding automático** (permisos, especialidades, alergias, medicamentos)
+
+#### Frontend (80%)
+- ✅ **16 servicios TypeScript** con type-safety completo
+- ✅ Sistema de **autenticación** con JWT y AuthContext
+- ✅ **PermissionGuard** y usePermissions hook
+- ✅ **Landing page** moderna y responsive
+- ✅ **Dashboard** con stats organizadas por permisos
+- ✅ **Gestión de usuarios** con roles y especialidades
+- ✅ **Gestión de roles** con asignación de permisos
+- ✅ **Gestión de especialidades** con iconos y colores
+- ✅ **Gestión de pacientes** (lista, crear, detalle)
+- ✅ **Vista detallada de paciente** con sistema de tabs
+- ✅ **Contactos de emergencia** (FHIR RelatedPerson)
+- ✅ **Alergias** con catálogo y fuzzy search (859 líneas)
+- ✅ **Medicamentos** con catálogo y fuzzy search (906 líneas)
+- ✅ **12 paletas de color** para organizaciones
+- ✅ **Subscription management** con upgrade/downgrade
+- ✅ UI/UX avanzada: modales blur, badges semánticos, autocomplete inteligente
+
+### � En Progreso (10%)
+- � **Condiciones médicas** (FHIR Condition) - modelo y API listos, falta UI
+- 🔄 **Observaciones** (FHIR Observation) - signos vitales
+- 🔄 **Testing** - unit tests y e2e tests
+
+### 📋 Roadmap (5%)
+- 📋 **Sistema de citas** (FHIR Appointment)
+- 📋 **Calendario médico** integrado
+- 📋 **Documentos clínicos** (FHIR DocumentReference)
+- 📋 **Procedimientos** (FHIR Procedure)
+- 📋 **Reportes y analytics**
+- 📋 **Notificaciones en tiempo real**
+- 📋 **Deployment** (Docker, CI/CD)
+
+## 📜 Historial de Desarrollo
+
+### Branch: `patients` (Actual)
+```
+02f293d - feat: Translate medications modal to Spanish (Nov 10, 2025)
+dd4524e - feat: Implement complete medications system with catalog and fuzzy search
+c8010fd - feat: Enhance allergies UI with catalog selector and improved UX
+fac2752 - feat: Implement complete allergies functionality with FHIR compliance
+8ac5ae3 - feat: Implement emergency contacts tab with full CRUD
+d86511f - feat: Implementar vista detallada de paciente con sistema de tabs
+7826cdd - feat: Implementar UI básica de pacientes con verificación de permisos
+d4bcb3d - fix: Actualizar sistema de permisos y roles para FHIR
+15b8a4d - feat: Sistema completo de gestión de pacientes con estándares FHIR
+```
+
+### Branch: `subscriptions` (Merged)
+```
+191cf85 - feat: Sistema completo de upgrade/downgrade con validación y notificaciones
+a5977b7 - fix: Mejorar manejo de webhooks de LemonSqueezy
+3b5a63b - feat: Implementar sistema completo de suscripciones con LemonSqueezy
+```
+
+### Branch: `main` (Stable)
+```
+202b9b7 - fix: Add permission guards and empty section handling
+7316e5f - feat: Implement dashboard sectoring by permission categories with compact stats
+463ea3a - feat: Add color palette system, profile page, and organization management
+c67daf5 - feat: Add complete specialty management system with icons and user assignment
+31fe190 - feat: Multi-tenant roles and permissions system
+603bb01 - feat: Implement hardcoded permissions system
+19e05f5 - feat: Complete role management system
+364a9ca - feat: Complete authentication system and user management
+ca22edf - docs: Update README with complete project documentation
+2f4a756 - feat: Add complete TypeScript service layer for all backend APIs
+a50cdbb - feat: Add complete CRUD API routes for all models using Flask Blueprints
+```
+
+## 🎯 Logros Técnicos Destacados
+
+1. **Arquitectura Escalable**
+   - Backend modular con Flask Blueprints
+   - Frontend con App Router de Next.js
+   - Separación clara de responsabilidades
+
+2. **Type-Safety End-to-End**
+   - TypeScript en frontend con interfaces completas
+   - SQLAlchemy con type hints en backend
+   - Validación de datos en ambas capas
+
+3. **FHIR R4 Compliance**
+   - Patient, RelatedPerson, AllergyIntolerance, MedicationStatement, Condition
+   - Códigos estándar: SNOMED CT, RxNorm, NDC, ATC, ICD-10
+   - Estructura de datos conforme a estándares internacionales
+
+4. **Sistema de Permisos Granular**
+   - 120 permisos organizados en 19 categorías
+   - Guards reutilizables en componentes
+   - Lógica centralizada con hook personalizado
+
+5. **UX Innovadora**
+   - Fuzzy search algorithm custom para autocomplete
+   - Catálogos inteligentes con fallback a custom
+   - Modales glassmorphism con backdrop blur
+   - Responsive design con Tailwind CSS
+
+6. **Multi-Tenancy Robusto**
+   - Aislamiento completo de datos por organización
+   - Personalización (12 paletas de color)
+   - Límites por plan de suscripción
+
+## 🛠️ Tecnologías y Patrones Aplicados
+
+- **Backend**: Flask, SQLAlchemy, JWT, Blueprints, PostgreSQL
+- **Frontend**: Next.js 15, React 19, TypeScript, TailwindCSS 4
+- **Arquitectura**: RESTful API, Service Layer Pattern, Repository Pattern
+- **Seguridad**: JWT tokens, password hashing (bcrypt), CORS configurado
+- **Estándares**: FHIR R4, SNOMED CT, RxNorm, NDC, ATC, ICD-10
+- **Pagos**: LemonSqueezy con webhooks
+- **UI/UX**: Glassmorphism, Fuzzy Search, Permission Guards, Context API
+
+## 🚀 Quick Start para Desarrollo
+
+```bash
+# 1. Clonar y configurar
+git clone https://github.com/ivanlozaDEV/MedicCRM2.0.git
+cd MedicCRM2.0
+
+# 2. Backend setup
+cd backend
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python reset_db.py  # Crea DB + seed data
+
+# 3. Frontend setup
+cd ../frontend
+npm install
+
+# 4. Ejecutar (2 terminales)
+# Terminal 1: cd backend && source .venv/bin/activate && python app.py
+# Terminal 2: cd frontend && npm run dev
+
+# 5. Abrir http://localhost:3000
+```
+
+## 📞 Contacto y Contribuciones
+
+- **GitHub**: [ivanlozaDEV/MedicCRM2.0](https://github.com/ivanlozaDEV/MedicCRM2.0)
+- **Branch Activo**: `patients`
+- **Issues**: Para reportar bugs o sugerir features
 
 ---
 
-**¡Listo para desarrollar!** 🚀
+**DoctorCRM 2.0** - Sistema de gestión médica con estándares FHIR 🏥
 
-Para iniciar el desarrollo:
-```bash
-# Terminal 1 - Backend
-cd backend && source .venv/bin/activate && python app.py
-
-# Terminal 2 - Frontend  
-cd frontend && npm run dev
-```
-
-Luego abre `http://localhost:3000` en tu navegador.
-
-Para cualquier duda, consulta:
-- Este README completo
-- Código comentado en `backend/` y `frontend/`
-- Issues en GitHub
+*Última actualización: Noviembre 10, 2025*
