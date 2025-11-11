@@ -20,6 +20,7 @@ from routes.patients import patients_bp
 from routes.patient_contacts import patient_contacts_bp
 from routes.allergies import allergies_bp
 from routes.patient_allergies import patient_allergies_bp
+from routes.medications import medications_bp
 from routes.patient_medications import patient_medications_bp
 from routes.patient_conditions import patient_conditions_bp
 
@@ -38,6 +39,7 @@ __all__ = [
     'patient_contacts_bp',
     'allergies_bp',
     'patient_allergies_bp',
+    'medications_bp',
     'patient_medications_bp',
     'patient_conditions_bp'
 ]

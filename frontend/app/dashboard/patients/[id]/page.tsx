@@ -17,6 +17,7 @@ import {
 } from '@heroicons/react/24/outline'
 import EmergencyContactsTab from '@/components/patients/EmergencyContactsTab'
 import AllergiesTab from '@/components/patients/AllergiesTab'
+import MedicationsTab from '@/components/patients/MedicationsTab'
 
 type TabType = 'general' | 'contacts' | 'allergies' | 'medications' | 'conditions'
 
@@ -223,9 +224,7 @@ export default function PatientDetailPage() {
           <AllergiesTab patientId={patientId} />
         )}
         {activeTab === 'medications' && (
-          <div className="text-center py-12 text-gray-500">
-            Tab de Medicamentos FHIR (próximamente)
-          </div>
+          <MedicationsTab patientId={patientId} />
         )}
         {activeTab === 'conditions' && (
           <div className="text-center py-12 text-gray-500">

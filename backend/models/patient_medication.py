@@ -19,6 +19,12 @@ class PatientMedication(db.Model):
         nullable=False,
         index=True
     )
+    medication_id = db.Column(
+        db.Integer,
+        db.ForeignKey('medications.id', ondelete='SET NULL'),
+        nullable=True,  # Optional - allows custom medications not in catalog
+        index=True
+    )
     
     # Medication Information
     medication_name = db.Column(db.String(255), nullable=False)  # Name of the medication
@@ -58,6 +64,7 @@ class PatientMedication(db.Model):
     
     # Relationships
     patient = db.relationship('Patient', backref=db.backref('medications', lazy='dynamic', cascade='all, delete-orphan'))
+    medication = db.relationship('Medication', back_populates='patient_medications')  # Link to medication catalog
     prescriber = db.relationship('User', foreign_keys=[prescriber_id])
     
     def __repr__(self):

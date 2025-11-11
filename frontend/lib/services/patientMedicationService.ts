@@ -8,31 +8,24 @@ import { apiRequest } from '../api';
 export interface PatientMedication {
   id: number;
   patient_id: number;
-  medication: {
-    name: string;
-    code?: string;
-    system?: string;
-  };
+  medication_id?: number | null;
+  medication_name: string;
+  medication_code?: string;
+  medication_system?: string;
   status: string;
-  is_current: boolean;
-  dosage: {
-    text?: string;
-    dose?: string;
-    route?: string;
-    frequency?: string;
-    is_prn: boolean;
-  };
-  timing: {
-    start_date?: string;
-    end_date?: string;
-  };
-  reason: {
-    code?: string;
-    text?: string;
-  };
+  dosage_text?: string;
+  dose?: string;
+  route?: string;
+  frequency?: string;
+  start_date?: string;
+  end_date?: string;
+  reason_code?: string;
+  reason_text?: string;
   prescriber_name?: string;
+  prescriber_id?: number | null;
   pharmacy?: string;
-  refills_remaining?: number;
+  refills_remaining?: number | null;
+  is_prn: boolean;
   notes?: string;
   created_at: string;
   updated_at: string;
@@ -66,42 +59,27 @@ export const patientMedicationService = {
   /**
    * Get all medications for a patient
    */
-  getAll: async (
-    patientId: number,
-    params?: {
-      status?: string;
-      current_only?: boolean;
-      include_prescriber?: boolean;
-    }
-  ): Promise<{ success: boolean; data: PatientMedication[]; count: number; error?: string }> => {
-    const queryParams = new URLSearchParams({ patient_id: patientId.toString() });
-    if (params?.status) queryParams.append('status', params.status);
-    if (params?.current_only) queryParams.append('current_only', 'true');
-    if (params?.include_prescriber) queryParams.append('include_prescriber', 'true');
-    
-    return apiRequest(`/patient-medications?${queryParams.toString()}`, { method: 'GET' });
+  getAll: async (patientId: number): Promise<{ success: boolean; data: PatientMedication[]; count: number; error?: string }> => {
+    return apiRequest(`/api/patient-medications?patient_id=${patientId}`, { method: 'GET' });
   },
 
   /**
    * Get a single medication by ID
    */
-  getById: async (
-    medicationId: number,
-    includePrescriber = false
-  ): Promise<{ success: boolean; data: PatientMedication; error?: string }> => {
-    const url = `/patient-medications/${medicationId}${includePrescriber ? '?include_prescriber=true' : ''}`;
-    return apiRequest(url, { method: 'GET' });
+  getById: async (medicationId: number): Promise<{ success: boolean; data: PatientMedication; error?: string }> => {
+    return apiRequest(`/api/patient-medications/${medicationId}`, { method: 'GET' });
   },
 
   /**
    * Create a new patient medication
    */
   create: async (
-    medicationData: CreatePatientMedicationData
+    patientId: number,
+    medicationData: Omit<CreatePatientMedicationData, 'patient_id'>
   ): Promise<{ success: boolean; data: PatientMedication; message?: string; error?: string }> => {
-    return apiRequest('/patient-medications', {
+    return apiRequest('/api/patient-medications', {
       method: 'POST',
-      body: JSON.stringify(medicationData),
+      body: JSON.stringify({ ...medicationData, patient_id: patientId }),
     });
   },
 
@@ -109,10 +87,11 @@ export const patientMedicationService = {
    * Update a patient medication
    */
   update: async (
+    patientId: number,
     medicationId: number,
     medicationData: UpdatePatientMedicationData
   ): Promise<{ success: boolean; data: PatientMedication; message?: string; error?: string }> => {
-    return apiRequest(`/patient-medications/${medicationId}`, {
+    return apiRequest(`/api/patient-medications/${medicationId}`, {
       method: 'PUT',
       body: JSON.stringify(medicationData),
     });
@@ -122,21 +101,9 @@ export const patientMedicationService = {
    * Delete a patient medication
    */
   delete: async (
+    patientId: number,
     medicationId: number
   ): Promise<{ success: boolean; message?: string; error?: string }> => {
-    return apiRequest(`/patient-medications/${medicationId}`, { method: 'DELETE' });
-  },
-
-  /**
-   * Discontinue a medication
-   */
-  discontinue: async (
-    medicationId: number,
-    reason?: string
-  ): Promise<{ success: boolean; data: PatientMedication; message?: string; error?: string }> => {
-    return apiRequest(`/patient-medications/${medicationId}/discontinue`, {
-      method: 'POST',
-      body: JSON.stringify({ reason }),
-    });
+    return apiRequest(`/api/patient-medications/${medicationId}`, { method: 'DELETE' });
   },
 };

@@ -42,6 +42,9 @@ export type { PatientAllergy, CreatePatientAllergyData, UpdatePatientAllergyData
 export { allergyService } from './allergyService';
 export type { Allergy, CreateAllergyData, UpdateAllergyData } from './allergyService';
 
+export { medicationService } from './medicationService';
+export type { MedicationCatalog, MedicationCatalogFormData, MedicationCatalogFilters } from './medicationService';
+
 export { patientMedicationService } from './patientMedicationService';
 export type { PatientMedication, CreatePatientMedicationData, UpdatePatientMedicationData } from './patientMedicationService';
 

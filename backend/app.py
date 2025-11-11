@@ -21,6 +21,7 @@ from routes import (
     patient_contacts_bp,
     allergies_bp,
     patient_allergies_bp,
+    medications_bp,
     patient_medications_bp,
     patient_conditions_bp
 )
@@ -43,7 +44,7 @@ from routes import (
     roles_bp, permissions_bp, specialties_bp,
     role_permissions_bp, user_specialties_bp, webhooks_bp,
     patients_bp, patient_contacts_bp,
-    allergies_bp, patient_allergies_bp, patient_medications_bp, patient_conditions_bp
+    allergies_bp, patient_allergies_bp, medications_bp, patient_medications_bp, patient_conditions_bp
 )
 
 app.register_blueprint(auth_bp)
@@ -60,6 +61,7 @@ app.register_blueprint(patients_bp)
 app.register_blueprint(patient_contacts_bp)
 app.register_blueprint(allergies_bp)
 app.register_blueprint(patient_allergies_bp)
+app.register_blueprint(medications_bp)
 app.register_blueprint(patient_medications_bp)
 app.register_blueprint(patient_conditions_bp)
 

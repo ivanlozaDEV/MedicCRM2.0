@@ -25,6 +25,7 @@ from models.patient import Patient
 from models.patient_contact import PatientContact
 from models.allergy import Allergy
 from models.patient_allergy import PatientAllergy
+from models.medication import Medication
 from models.patient_medication import PatientMedication
 from models.patient_condition import PatientCondition
 
@@ -106,6 +107,17 @@ def reset_database():
             traceback.print_exc()
             return
         
+        print("\n🌱 Seeding medication catalog...")
+        try:
+            from seed_medications import seed_medications
+            seed_medications(auto_skip=True)
+            print("✅ Medications seeded successfully")
+        except Exception as e:
+            print(f"❌ Error seeding medications: {e}")
+            import traceback
+            traceback.print_exc()
+            return
+        
         print("\n" + "=" * 60)
         print("✅ DATABASE RESET COMPLETE")
         print("=" * 60)
@@ -123,6 +135,7 @@ def reset_database():
         print("  - patient_contacts")
         print("  - allergies (catalog)")
         print("  - patient_allergies")
+        print("  - medications (catalog)")
         print("  - patient_medications")
         print("  - patient_conditions")
         
@@ -130,6 +143,7 @@ def reset_database():
         print(f"  - Permissions: {Permission.query.count()}")
         print(f"  - Specialties: {Specialty.query.count()}")
         print(f"  - Allergies (catalog): {Allergy.query.count()}")
+        print(f"  - Medications (catalog): {Medication.query.count()}")
         
         print("\n✨ Database is now clean and ready to use!")
         print("=" * 60)
