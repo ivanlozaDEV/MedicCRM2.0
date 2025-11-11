@@ -39,6 +39,9 @@ export type { PatientContact, CreatePatientContactData, UpdatePatientContactData
 export { patientAllergyService } from './patientAllergyService';
 export type { PatientAllergy, CreatePatientAllergyData, UpdatePatientAllergyData } from './patientAllergyService';
 
+export { allergyService } from './allergyService';
+export type { Allergy, CreateAllergyData, UpdateAllergyData } from './allergyService';
+
 export { patientMedicationService } from './patientMedicationService';
 export type { PatientMedication, CreatePatientMedicationData, UpdatePatientMedicationData } from './patientMedicationService';
 
