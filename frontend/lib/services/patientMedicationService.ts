@@ -5,32 +5,42 @@
 
 import { apiRequest } from '../api';
 
+// Estructura FHIR que devuelve el backend
 export interface PatientMedication {
   id: number;
   patient_id: number;
-  medication_id?: number | null;
-  medication_name: string;
-  medication_code?: string;
-  medication_system?: string;
   status: string;
-  dosage_text?: string;
-  dose?: string;
-  route?: string;
-  frequency?: string;
-  start_date?: string;
-  end_date?: string;
-  reason_code?: string;
-  reason_text?: string;
+  is_current: boolean;
+  medication: {
+    name: string;
+    code?: string;
+    system?: string;
+  };
+  dosage: {
+    text?: string;
+    dose?: string;
+    route?: string;
+    frequency?: string;
+    is_prn: boolean;
+  };
+  timing: {
+    start_date?: string | null;
+    end_date?: string | null;
+  };
+  reason: {
+    code?: string;
+    text?: string;
+  };
   prescriber_name?: string;
   prescriber_id?: number | null;
   pharmacy?: string;
   refills_remaining?: number | null;
-  is_prn: boolean;
   notes?: string;
   created_at: string;
   updated_at: string;
 }
 
+// Estructura plana para crear/editar (el backend acepta ambos formatos)
 export interface CreatePatientMedicationData {
   patient_id: number;
   medication_name: string;

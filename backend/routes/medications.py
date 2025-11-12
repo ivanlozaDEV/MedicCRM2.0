@@ -7,7 +7,6 @@ medications_bp = Blueprint('medications', __name__)
 
 
 @medications_bp.route('/api/medications', methods=['GET'])
-@jwt_required()
 def get_medications():
     """
     Get all medications from the catalog with optional filtering.

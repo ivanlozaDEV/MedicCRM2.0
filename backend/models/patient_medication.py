@@ -28,35 +28,35 @@ class PatientMedication(db.Model):
     
     # Medication Information
     medication_name = db.Column(db.String(255), nullable=False)  # Name of the medication
-    medication_code = db.Column(db.String(50))  # RxNorm, NDC, or other coding system
-    medication_system = db.Column(db.String(100))  # Coding system used (e.g., RxNorm)
+    medication_code = db.Column(db.String(50), nullable=True)  # RxNorm, NDC, or other coding system
+    medication_system = db.Column(db.String(100), nullable=True)  # Coding system used (e.g., RxNorm)
     
     # Status
-    status = db.Column(db.String(20), nullable=False, default='active')  # active, completed, stopped, on-hold
+    status = db.Column(db.String(20), nullable=True, default='active')  # active, completed, stopped, on-hold
     
     # Dosage Information
-    dosage_text = db.Column(db.String(500))  # Free text dosage instructions
-    dose = db.Column(db.String(100))  # Dose amount (e.g., "500 mg")
-    route = db.Column(db.String(100))  # Route of administration (oral, IV, topical, etc.)
-    frequency = db.Column(db.String(100))  # How often (e.g., "twice daily", "every 6 hours")
+    dosage_text = db.Column(db.String(500), nullable=True)  # Free text dosage instructions
+    dose = db.Column(db.String(100), nullable=True)  # Dose amount (e.g., "500 mg")
+    route = db.Column(db.String(100), nullable=True)  # Route of administration (oral, IV, topical, etc.)
+    frequency = db.Column(db.String(100), nullable=True)  # How often (e.g., "twice daily", "every 6 hours")
     
     # Timing
-    start_date = db.Column(db.Date)  # When the medication was started
-    end_date = db.Column(db.Date)  # When the medication was stopped (if applicable)
+    start_date = db.Column(db.Date, nullable=True)  # When the medication was started
+    end_date = db.Column(db.Date, nullable=True)  # When the medication was stopped (if applicable)
     
     # Reason
-    reason_code = db.Column(db.String(50))  # ICD-10, SNOMED CT code for the condition
-    reason_text = db.Column(db.String(255))  # Free text reason for taking
+    reason_code = db.Column(db.String(50), nullable=True)  # ICD-10, SNOMED CT code for the condition
+    reason_text = db.Column(db.String(255), nullable=True)  # Free text reason for taking
     
     # Prescriber Information
-    prescriber_name = db.Column(db.String(200))  # Name of the prescribing provider
-    prescriber_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='SET NULL'))  # Link to user if internal
+    prescriber_name = db.Column(db.String(200), nullable=True)  # Name of the prescribing provider
+    prescriber_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='SET NULL'), nullable=True)  # Link to user if internal
     
     # Additional Information
-    pharmacy = db.Column(db.String(200))  # Pharmacy name
-    refills_remaining = db.Column(db.Integer)  # Number of refills left
-    is_prn = db.Column(db.Boolean, default=False)  # PRN (as needed) medication
-    notes = db.Column(db.Text)  # Additional notes
+    pharmacy = db.Column(db.String(200), nullable=True)  # Pharmacy name
+    refills_remaining = db.Column(db.Integer, nullable=True)  # Number of refills left
+    is_prn = db.Column(db.Boolean, default=False, nullable=False)  # PRN (as needed) medication
+    notes = db.Column(db.Text, nullable=True)  # Additional notes
     
     # Timestamps
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)

@@ -109,14 +109,19 @@ def create_medication():
         
         # Convert date strings to date objects if present
         for date_field in ['start_date', 'end_date']:
-            if date_field in data and isinstance(data[date_field], str):
-                try:
-                    data[date_field] = datetime.strptime(data[date_field], '%Y-%m-%d').date()
-                except ValueError:
-                    return jsonify({
-                        'success': False,
-                        'error': f'Invalid date format for {date_field}. Use YYYY-MM-DD'
-                    }), 400
+            if date_field in data:
+                # Handle empty strings - convert to None
+                if data[date_field] == '' or data[date_field] is None:
+                    data[date_field] = None
+                # Handle valid date strings
+                elif isinstance(data[date_field], str):
+                    try:
+                        data[date_field] = datetime.strptime(data[date_field], '%Y-%m-%d').date()
+                    except ValueError:
+                        return jsonify({
+                            'success': False,
+                            'error': f'Invalid date format for {date_field}. Use YYYY-MM-DD'
+                        }), 400
         
         medication = PatientMedication.create(data)
         
@@ -150,14 +155,19 @@ def update_medication(medication_id):
         
         # Convert date strings to date objects if present
         for date_field in ['start_date', 'end_date']:
-            if date_field in data and isinstance(data[date_field], str):
-                try:
-                    data[date_field] = datetime.strptime(data[date_field], '%Y-%m-%d').date()
-                except ValueError:
-                    return jsonify({
-                        'success': False,
-                        'error': f'Invalid date format for {date_field}. Use YYYY-MM-DD'
-                    }), 400
+            if date_field in data:
+                # Handle empty strings - convert to None
+                if data[date_field] == '' or data[date_field] is None:
+                    data[date_field] = None
+                # Handle valid date strings
+                elif isinstance(data[date_field], str):
+                    try:
+                        data[date_field] = datetime.strptime(data[date_field], '%Y-%m-%d').date()
+                    except ValueError:
+                        return jsonify({
+                            'success': False,
+                            'error': f'Invalid date format for {date_field}. Use YYYY-MM-DD'
+                        }), 400
         
         medication.update(data)
         
