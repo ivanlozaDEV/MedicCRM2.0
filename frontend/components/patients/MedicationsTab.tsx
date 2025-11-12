@@ -7,9 +7,6 @@ import {
   PlusIcon, 
   PencilIcon, 
   TrashIcon,
-  CheckCircleIcon,
-  XCircleIcon,
-  ClockIcon,
   EyeIcon
 } from '@heroicons/react/24/outline'
 import MedicationFormModal from './MedicationFormModal'
@@ -84,49 +81,6 @@ export default function MedicationsTab({ patientId }: MedicationsTabProps) {
     }
   }
 
-  const getStatusBadge = (status: string) => {
-    const badges: Record<string, { color: string; icon: any; label: string }> = {
-      active: { color: 'bg-green-100 text-green-800', icon: CheckCircleIcon, label: 'Activo' },
-      completed: { color: 'bg-gray-100 text-gray-800', icon: CheckCircleIcon, label: 'Completado' },
-      stopped: { color: 'bg-red-100 text-red-800', icon: XCircleIcon, label: 'Detenido' },
-      'on-hold': { color: 'bg-yellow-100 text-yellow-800', icon: ClockIcon, label: 'En Pausa' }
-    }
-
-    const badge = badges[status] || badges.active
-    const Icon = badge.icon
-
-    return (
-      <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${badge.color}`}>
-        <Icon className="w-4 h-4" />
-        {badge.label}
-      </span>
-    )
-  }
-
-  const getCategoryBadge = (category?: string) => {
-    if (!category) return null
-
-    const colors: Record<string, string> = {
-      antibiotic: 'bg-purple-100 text-purple-800',
-      analgesic: 'bg-blue-100 text-blue-800',
-      antihypertensive: 'bg-red-100 text-red-800',
-      antidiabetic: 'bg-green-100 text-green-800',
-      antilipidemic: 'bg-yellow-100 text-yellow-800',
-      antidepressant: 'bg-indigo-100 text-indigo-800',
-      gastrointestinal: 'bg-orange-100 text-orange-800',
-      anticoagulant: 'bg-pink-100 text-pink-800',
-      bronchodilator: 'bg-cyan-100 text-cyan-800',
-      thyroid: 'bg-teal-100 text-teal-800',
-      antihistamine: 'bg-lime-100 text-lime-800'
-    }
-
-    return (
-      <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${colors[category] || 'bg-gray-100 text-gray-800'}`}>
-        {category}
-      </span>
-    )
-  }
-
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -178,114 +132,32 @@ export default function MedicationsTab({ patientId }: MedicationsTabProps) {
             >
               <div className="flex justify-between items-start">
                 <div className="flex-1">
-                  {/* Encabezado con nombre y estado */}
-                  <div className="flex items-start gap-3 mb-3">
-                    <div className="flex-1">
-                      <h4 className="text-lg font-semibold text-gray-900 mb-1">
-                        {medication.medication.name}
-                      </h4>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        {getStatusBadge(medication.status)}
-                        {medication.dosage.is_prn && (
-                          <span className="px-2 py-0.5 bg-blue-100 text-blue-800 text-xs font-medium rounded">
-                            PRN
-                          </span>
-                        )}
-                      </div>
+                  {/* Nombre del medicamento */}
+                  <h4 className="text-lg font-semibold text-gray-900 mb-3">
+                    {medication.medication.name}
+                  </h4>
+
+                  {/* INFORMACIÓN BÁSICA - Solo dosis, vía y frecuencia */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+                    <div>
+                      <span className="font-medium text-gray-700">Dosis:</span>
+                      <span className={`ml-2 ${medication.dosage.dose ? 'text-gray-900' : 'text-gray-400 italic'}`}>
+                        {medication.dosage.dose || 'No especificada'}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-700">Vía:</span>
+                      <span className={`ml-2 ${medication.dosage.route ? 'text-gray-900' : 'text-gray-400 italic'}`}>
+                        {medication.dosage.route || 'No especificada'}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-700">Frecuencia:</span>
+                      <span className={`ml-2 ${medication.dosage.frequency ? 'text-gray-900' : 'text-gray-400 italic'}`}>
+                        {medication.dosage.frequency || 'No especificada'}
+                      </span>
                     </div>
                   </div>
-
-                  {/* INFORMACIÓN BÁSICA - SIEMPRE VISIBLE */}
-                  <div className="mb-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
-                      <div>
-                        <span className="font-semibold text-blue-900">Dosis:</span>
-                        <span className={`ml-2 ${medication.dosage.dose ? 'text-blue-700' : 'text-gray-400 italic'}`}>
-                          {medication.dosage.dose || 'No especificada'}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="font-semibold text-blue-900">Vía:</span>
-                        <span className={`ml-2 ${medication.dosage.route ? 'text-blue-700' : 'text-gray-400 italic'}`}>
-                          {medication.dosage.route || 'No especificada'}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="font-semibold text-blue-900">Frecuencia:</span>
-                        <span className={`ml-2 ${medication.dosage.frequency ? 'text-blue-700' : 'text-gray-400 italic'}`}>
-                          {medication.dosage.frequency || 'No especificada'}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Instrucciones de dosificación destacadas */}
-                  {medication.dosage.text && (
-                    <div className="mb-3 p-3 bg-green-50 rounded-lg border border-green-100">
-                      <div className="text-sm">
-                        <span className="font-semibold text-green-900">Instrucciones:</span>
-                        <p className="mt-1 text-green-700">{medication.dosage.text}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Información adicional (solo si existe) */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                    {medication.reason.text && (
-                      <div className="md:col-span-2">
-                        <span className="font-medium text-gray-700">Razón:</span>
-                        <span className="ml-2 text-gray-600">{medication.reason.text}</span>
-                      </div>
-                    )}
-                    {medication.timing.start_date && (
-                      <div>
-                        <span className="font-medium text-gray-700">Fecha Inicio:</span>
-                        <span className="ml-2 text-gray-600">
-                          {new Date(medication.timing.start_date).toLocaleDateString('es-ES')}
-                        </span>
-                      </div>
-                    )}
-                    {medication.timing.end_date && (
-                      <div>
-                        <span className="font-medium text-gray-700">Fecha Fin:</span>
-                        <span className="ml-2 text-gray-600">
-                          {new Date(medication.timing.end_date).toLocaleDateString('es-ES')}
-                        </span>
-                      </div>
-                    )}
-                    {medication.prescriber_name && (
-                      <div>
-                        <span className="font-medium text-gray-700">Prescriptor:</span>
-                        <span className="ml-2 text-gray-600">{medication.prescriber_name}</span>
-                      </div>
-                    )}
-                    {medication.pharmacy && (
-                      <div>
-                        <span className="font-medium text-gray-700">Farmacia:</span>
-                        <span className="ml-2 text-gray-600">{medication.pharmacy}</span>
-                      </div>
-                    )}
-                    {medication.refills_remaining !== null && medication.refills_remaining !== undefined && (
-                      <div>
-                        <span className="font-medium text-gray-700">Recargas Restantes:</span>
-                        <span className="ml-2 text-gray-600">{medication.refills_remaining}</span>
-                      </div>
-                    )}
-                    {medication.notes && (
-                      <div className="md:col-span-2 mt-2 p-2 bg-yellow-50 rounded border border-yellow-100">
-                        <span className="font-medium text-yellow-900">Notas:</span>
-                        <p className="mt-1 text-yellow-700 text-xs">{medication.notes}</p>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Información técnica al final */}
-                  {medication.medication.code && (
-                    <div className="mt-3 pt-3 border-t border-gray-200 text-xs text-gray-500">
-                      <span className="font-medium">Código:</span> {medication.medication.code}
-                      {medication.medication.system && ` (${medication.medication.system})`}
-                    </div>
-                  )}
                 </div>
 
                 <div className="flex items-center gap-2 ml-4">
