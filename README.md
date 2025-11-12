@@ -463,8 +463,14 @@ await patientMedicationService.create(patientId, {
 - **Vista detallada** con sistema de tabs:
   - **General**: Información demográfica
   - **Contactos**: Contactos de emergencia (FHIR RelatedPerson)
-  - **Alergias**: AllergyIntolerance con catálogo y fuzzy search
-  - **Medicamentos**: MedicationStatement con catálogo y fuzzy search
+  - **Alergias**: AllergyIntolerance con arquitectura modular
+    - `AllergyFormModal` (622 líneas) - Crear/editar con catálogo y fuzzy search
+    - `AllergyDetailsModal` (236 líneas) - Vista completa de todos los campos FHIR
+    - `AllergiesTab` (288 líneas) - Lista y coordinación de modales
+  - **Medicamentos**: MedicationStatement con arquitectura modular
+    - `MedicationFormModal` (672 líneas) - Crear/editar con catálogo y fuzzy search
+    - `MedicationDetailsModal` (207 líneas) - Vista completa de todos los campos FHIR
+    - `MedicationsTab` (212 líneas) - Lista simplificada (solo básicos en cards)
   - **Condiciones**: Próximamente
 
 ### 4. Catálogos Inteligentes
@@ -477,9 +483,14 @@ await patientMedicationService.create(patientId, {
 ### 5. UI/UX Avanzada
 - **Fuzzy search** con algoritmo custom (exact + character-order matching)
 - **Modales con backdrop blur** efecto glassmorphism
+- **Arquitectura modular de componentes**:
+  - Separación clara: Lista + FormModal + DetailsModal
+  - Reducción de código: AllergiesTab 65% (824→288), MedicationsTab 76% (902→212)
+  - Componentes reutilizables y mantenibles
 - **Badges de estado** con iconos y colores semánticos
 - **Tarjetas de información** del catálogo con códigos estándar
 - **Sistema de tabs** para organización de información
+- **Cards simplificados** en listas (solo datos esenciales)
 - **Responsive design** completo con Tailwind CSS
 
 ### 6. Integración de Suscripciones
@@ -1724,11 +1735,17 @@ Repositorio: [github.com/ivanlozaDEV/MedicCRM2.0](https://github.com/ivanlozaDEV
 - ✅ **Gestión de pacientes** (lista, crear, detalle)
 - ✅ **Vista detallada de paciente** con sistema de tabs
 - ✅ **Contactos de emergencia** (FHIR RelatedPerson)
-- ✅ **Alergias** con catálogo y fuzzy search (859 líneas)
-- ✅ **Medicamentos** con catálogo y fuzzy search (906 líneas)
+- ✅ **Alergias** con arquitectura modular:
+  - AllergyFormModal (622 líneas) - Crear/editar
+  - AllergyDetailsModal (236 líneas) - Vista completa
+  - AllergiesTab (288 líneas) - Lista y coordinación
+- ✅ **Medicamentos** con arquitectura modular:
+  - MedicationFormModal (672 líneas) - Crear/editar
+  - MedicationDetailsModal (207 líneas) - Vista completa
+  - MedicationsTab (212 líneas) - Lista simplificada
 - ✅ **12 paletas de color** para organizaciones
 - ✅ **Subscription management** con upgrade/downgrade
-- ✅ UI/UX avanzada: modales blur, badges semánticos, autocomplete inteligente
+- ✅ UI/UX avanzada: modales blur, badges semánticos, autocomplete inteligente, componentes modulares
 
 ### � En Progreso (10%)
 - � **Condiciones médicas** (FHIR Condition) - modelo y API listos, falta UI
@@ -1748,6 +1765,8 @@ Repositorio: [github.com/ivanlozaDEV/MedicCRM2.0](https://github.com/ivanlozaDEV
 
 ### Branch: `patients` (Actual)
 ```
+8ae0c7b - refactor: Separate AllergiesTab into modular components with details modal (Nov 12, 2025)
+a77d85f - refactor: Simplify medication cards to show only essential fields (Nov 12, 2025)
 02f293d - feat: Translate medications modal to Spanish (Nov 10, 2025)
 dd4524e - feat: Implement complete medications system with catalog and fuzzy search
 c8010fd - feat: Enhance allergies UI with catalog selector and improved UX
@@ -1859,4 +1878,4 @@ npm install
 
 **DoctorCRM 2.0** - Sistema de gestión médica con estándares FHIR 🏥
 
-*Última actualización: Noviembre 10, 2025*
+*Última actualización: Noviembre 12, 2025*
