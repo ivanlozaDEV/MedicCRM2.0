@@ -3,11 +3,13 @@
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
+import { useOrganizationSlug } from '@/lib/hooks/useOrganizationSlug';
 
 export default function TopNavbar() {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const { user, organization, logout, roles } = useAuth();
+  const { slug } = useOrganizationSlug();
 
   // Si no hay usuario, mostrar loading o nada
   if (!user) {
@@ -127,7 +129,7 @@ export default function TopNavbar() {
               {/* Menu Items */}
               <div className="py-2">
                 <Link
-                  href="/dashboard/settings"
+                  href={`/${slug}/dashboard/settings`}
                   className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   onClick={() => setIsUserMenuOpen(false)}
                 >
@@ -138,7 +140,7 @@ export default function TopNavbar() {
                 </Link>
 
                 <Link
-                  href="/dashboard/organization"
+                  href={`/${slug}/dashboard/organization`}
                   className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   onClick={() => setIsUserMenuOpen(false)}
                 >
@@ -149,7 +151,7 @@ export default function TopNavbar() {
                 </Link>
 
                 <Link
-                  href="/dashboard/subscription"
+                  href={`/${slug}/dashboard/subscription`}
                   className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   onClick={() => setIsUserMenuOpen(false)}
                 >
@@ -160,7 +162,7 @@ export default function TopNavbar() {
                 </Link>
 
                 <Link
-                  href="/dashboard/settings"
+                  href={`/${slug}/dashboard/settings`}
                   className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   onClick={() => setIsUserMenuOpen(false)}
                 >

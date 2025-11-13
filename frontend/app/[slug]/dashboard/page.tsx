@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import StatsCard from '@/components/dashboard/StatsCard';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
+import { useOrganizationSlug } from '@/lib/hooks/useOrganizationSlug';
 import { userService } from '@/lib/services/userService';
 import { roleService } from '@/lib/services/roleService';
 import { subscriptionService, Subscription } from '@/lib/services/subscriptionService';
@@ -13,6 +14,7 @@ import RoleModal from '@/components/dashboard/RoleModal';
 
 export default function DashboardPage() {
   const { user, organization, permissions } = useAuth();
+  const { slug } = useOrganizationSlug();
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [stats, setStats] = useState({
     // Estadísticas administrativas
@@ -133,7 +135,7 @@ export default function DashboardPage() {
       value: stats.patientsCount,
       icon: (
         <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 715.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 0 0-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 0 1 5.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 0 1 9.288 0M15 7a3 3 0 1 1-6 0 3 3 0 0 1 6 0zm6 3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM7 10a2 2 0 1 1-4 0 2 2 0 0 1 4 0z" />
         </svg>
       ),
       colorClass: 'bg-blue-50',
@@ -538,7 +540,7 @@ export default function DashboardPage() {
                         ))}
                       </div>
                       <Link 
-                        href="/dashboard/activity" 
+                        href={`/${slug}/dashboard/activity`}
                         className="block text-center text-xs text-purple-600 font-medium mt-4 pt-3 border-t border-purple-200 hover:underline transition-colors"
                       >
                         Ver toda la actividad →
@@ -620,7 +622,7 @@ export default function DashboardPage() {
                   <p className="text-sm text-red-800 mt-1">
                     Para continuar usando DoctorCRM, activa un plan de suscripción.
                     <Link 
-                      href="/dashboard/subscription" 
+                      href={`/${slug}/dashboard/subscription`}
                       className="font-semibold text-red-900 underline ml-1 hover:no-underline transition-all"
                     >
                       Activar ahora →
@@ -653,7 +655,7 @@ export default function DashboardPage() {
                       </span>
                     )}
                     <Link 
-                      href="/dashboard/subscription" 
+                      href={`/${slug}/dashboard/subscription`}
                       className="font-medium text-blue-600 underline ml-1 hover:no-underline transition-all"
                     >
                       {subscription.status === 'trial' ? 'Activar suscripción' : 'Ver detalles'}

@@ -5,9 +5,11 @@ import { useRouter } from 'next/navigation'
 import { patientService, type CreatePatientData } from '@/lib/services'
 import { usePermissions } from '@/lib/hooks/usePermissions'
 import { useAuth } from '@/contexts/AuthContext'
+import { useOrganizationSlug } from '@/lib/hooks/useOrganizationSlug'
 
 export default function NewPatientPage() {
   const router = useRouter()
+  const { slug } = useOrganizationSlug()
   const { hasPermission } = usePermissions()
   const { user, organization } = useAuth()
   const [loading, setLoading] = useState(false)
@@ -44,9 +46,9 @@ export default function NewPatientPage() {
   // Check permission
   useEffect(() => {
     if (!hasPermission('patients.create')) {
-      router.push('/dashboard/patients')
+      router.push(`/${slug}/dashboard/patients`)
     }
-  }, [hasPermission, router])
+  }, [hasPermission, router, slug])
 
   // Update organization_id when organization is loaded
   useEffect(() => {
@@ -63,7 +65,7 @@ export default function NewPatientPage() {
     try {
       const response = await patientService.create(formData)
       if (response.success) {
-        router.push(`/dashboard/patients/${response.data.id}`)
+        router.push(`/${slug}/dashboard/patients/${response.data.id}`)
       } else {
         setError(response.error || 'Error al crear paciente')
       }

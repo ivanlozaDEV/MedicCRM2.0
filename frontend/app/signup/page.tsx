@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 
 export default function SignupPage() {
   const router = useRouter();
-  const { signup, isAuthenticated, isLoading: authLoading } = useAuth();
+  const { signup, isAuthenticated, isLoading: authLoading, organization } = useAuth();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -22,10 +22,10 @@ export default function SignupPage() {
 
   // Redirigir si ya está autenticado
   useEffect(() => {
-    if (!authLoading && isAuthenticated) {
-      router.push('/dashboard');
+    if (!authLoading && isAuthenticated && organization) {
+      router.push(`/${organization.slug}/dashboard`);
     }
-  }, [isAuthenticated, authLoading, router]);
+  }, [isAuthenticated, authLoading, organization, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -2,6 +2,29 @@
 
 Sistema completo de gestión médica (CRM/EHR) con funcionalidades de multi-tenancy, gestión de usuarios, roles, permisos, especialidades médicas, pacientes, historias clínicas y suscripciones. Construido con **Flask** (backend) y **Next.js** (frontend) siguiendo estándares **FHIR R4**.
 
+## 🌐 Multi-Tenancy & Routing
+
+### Routing Basado en Slug de Organización
+
+El sistema implementa **multi-tenancy verdadero** mediante URLs con slug de organización:
+
+- **Formato de URL**: `/{organization-slug}/dashboard/*`
+- **Ejemplo**: `http://localhost:3000/clinica-san-juan/dashboard/patients`
+
+### Características
+
+✅ **Aislamiento de Datos**: Cada organización accede solo a sus propios datos  
+✅ **URLs Únicas**: Cada clínica tiene su propia URL identificable  
+✅ **Branding Personalizado**: Cada organización puede tener su propia paleta de colores  
+✅ **Escalabilidad**: Preparado para subdominios (`clinica-san-juan.mediccrm.com`)
+
+### Componentes del Sistema
+
+- **Hook `useOrganizationSlug`**: Valida que el slug en la URL coincida con la organización del usuario
+- **Middleware**: Valida rutas y autenticación antes de renderizar
+- **AuthContext**: Redirige automáticamente al slug correcto después del login/signup
+- **Navegación Dinámica**: Sidebar y TopNavbar usan el slug en todos los links
+
 ## 🚀 Stack Tecnológico
 
 ### Backend

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { patientService, type Patient } from '@/lib/services'
 import { usePermissions, PermissionGuard } from '@/lib/hooks/usePermissions'
+import { useOrganizationSlug } from '@/lib/hooks/useOrganizationSlug'
 import { 
   ArrowLeftIcon, 
   PencilIcon,
@@ -25,6 +26,7 @@ type TabType = 'general' | 'contacts' | 'allergies' | 'medications' | 'condition
 export default function PatientDetailPage() {
   const router = useRouter()
   const params = useParams()
+  const { slug } = useOrganizationSlug()
   const patientId = parseInt(params.id as string)
   const { hasPermission } = usePermissions()
   
@@ -36,9 +38,9 @@ export default function PatientDetailPage() {
   // Check permission
   useEffect(() => {
     if (!hasPermission('patients.view')) {
-      router.push('/dashboard/patients')
+      router.push(`/${slug}/dashboard/patients`)
     }
-  }, [hasPermission, router])
+  }, [hasPermission, router, slug])
 
   // Fetch patient data
   useEffect(() => {
@@ -111,7 +113,7 @@ export default function PatientDetailPage() {
       <div className="text-center py-12">
         <p className="text-gray-500">Paciente no encontrado</p>
         <button
-          onClick={() => router.push('/dashboard/patients')}
+          onClick={() => router.push(`/${slug}/dashboard/patients`)}
           className="mt-4 text-blue-600 hover:text-blue-800"
         >
           Volver a la lista
@@ -136,7 +138,7 @@ export default function PatientDetailPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
           <button
-            onClick={() => router.push('/dashboard/patients')}
+            onClick={() => router.push(`/${slug}/dashboard/patients`)}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
           >
             <ArrowLeftIcon className="h-5 w-5 text-gray-600" />

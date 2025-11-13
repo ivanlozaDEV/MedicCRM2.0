@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { patientService, type Patient } from '@/lib/services'
 import { useAuth } from '@/contexts/AuthContext'
 import { usePermissions, PermissionGuard } from '@/lib/hooks/usePermissions'
+import { useOrganizationSlug } from '@/lib/hooks/useOrganizationSlug'
 import { 
   PlusIcon, 
   MagnifyingGlassIcon, 
@@ -17,6 +18,7 @@ import {
 export default function PatientsPage() {
   const router = useRouter()
   const { organization } = useAuth()
+  const { slug } = useOrganizationSlug()
   const { hasPermission, isLoading: permissionsLoading } = usePermissions()
   const [patients, setPatients] = useState<Patient[]>([])
   const [loading, setLoading] = useState(true)
@@ -27,9 +29,9 @@ export default function PatientsPage() {
   // Check permission
   useEffect(() => {
     if (!permissionsLoading && !hasPermission('patients.view')) {
-      router.push('/dashboard')
+      router.push(`/${slug}/dashboard`)
     }
-  }, [hasPermission, permissionsLoading, router])
+  }, [hasPermission, permissionsLoading, router, slug])
 
   // Fetch patients
   useEffect(() => {
@@ -71,11 +73,11 @@ export default function PatientsPage() {
   }
 
   const handleCreatePatient = () => {
-    router.push('/dashboard/patients/new')
+    router.push(`/${slug}/dashboard/patients/new`)
   }
 
   const handleViewPatient = (id: number) => {
-    router.push(`/dashboard/patients/${id}`)
+    router.push(`/${slug}/dashboard/patients/${id}`)
   }
 
   const getStatusBadge = (isActive: boolean) => {

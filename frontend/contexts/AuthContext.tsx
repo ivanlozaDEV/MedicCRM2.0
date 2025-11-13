@@ -82,10 +82,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         
         // Cargar datos completos del usuario
-        await loadUser();
+        const userData = await authService.getCurrentUser();
         
-        // Redirigir al dashboard
-        router.push('/dashboard');
+        if (userData.success) {
+          setUser(userData.data.user);
+          setOrganization(userData.data.organization);
+          setPermissions(userData.data.permissions || []);
+          setRoles(userData.data.roles || []);
+          
+          const orgSlug = userData.data?.organization?.slug;
+          
+          // Redirigir al dashboard con el slug de la organización
+          if (orgSlug) {
+            router.push(`/${orgSlug}/dashboard`);
+          } else {
+            console.error('No organization slug found');
+            router.push('/login');
+          }
+        } else {
+          throw new Error('Error al cargar datos del usuario');
+        }
       } else {
         throw new Error(response.message || 'Error en el inicio de sesión');
       }
@@ -112,10 +128,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         
         // Cargar datos completos del usuario
-        await loadUser();
+        const userData = await authService.getCurrentUser();
         
-        // Redirigir al dashboard
-        router.push('/dashboard');
+        if (userData.success) {
+          setUser(userData.data.user);
+          setOrganization(userData.data.organization);
+          setPermissions(userData.data.permissions || []);
+          setRoles(userData.data.roles || []);
+          
+          const orgSlug = userData.data?.organization?.slug;
+          
+          // Redirigir al dashboard con el slug de la organización
+          if (orgSlug) {
+            router.push(`/${orgSlug}/dashboard`);
+          } else {
+            console.error('No organization slug found');
+            router.push('/login');
+          }
+        } else {
+          throw new Error('Error al cargar datos del usuario');
+        }
       } else {
         throw new Error(response.message || 'Error en el registro');
       }

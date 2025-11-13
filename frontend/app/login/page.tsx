@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login, isAuthenticated, isLoading } = useAuth();
+  const { login, isAuthenticated, isLoading, organization } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -18,10 +18,10 @@ export default function LoginPage() {
 
   // Redirigir si ya está autenticado
   useEffect(() => {
-    if (!isLoading && isAuthenticated) {
-      router.push('/dashboard');
+    if (!isLoading && isAuthenticated && organization) {
+      router.push(`/${organization.slug}/dashboard`);
     }
-  }, [isAuthenticated, isLoading, router]);
+  }, [isAuthenticated, isLoading, organization, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
