@@ -24,6 +24,11 @@ from routes.medications import medications_bp
 from routes.patient_medications import patient_medications_bp
 from routes.conditions import conditions_bp
 from routes.patient_conditions import patient_conditions_bp
+from routes.appointment_types import appointment_types_bp
+from routes.rooms import rooms_bp
+from routes.doctor_schedules import doctor_schedules_bp
+from routes.appointments import appointments_bp
+from routes.appointment_slots import appointment_slots_bp
 
 __all__ = [
     'auth_bp',
@@ -43,5 +48,10 @@ __all__ = [
     'medications_bp',
     'patient_medications_bp',
     'conditions_bp',
-    'patient_conditions_bp'
+    'patient_conditions_bp',
+    'appointment_types_bp',
+    'rooms_bp',
+    'doctor_schedules_bp',
+    'appointments_bp',
+    'appointment_slots_bp'
 ]

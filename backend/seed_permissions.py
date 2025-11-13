@@ -117,6 +117,16 @@ def seed_permissions():
             ('appointments.create', 'Crear Citas', 'Agendar nuevas citas', 'clinical'),
             ('appointments.update', 'Editar Citas', 'Modificar o reagendar citas', 'clinical'),
             ('appointments.delete', 'Eliminar Citas', 'Cancelar/eliminar citas', 'clinical'),
+            ('appointments.cancel', 'Cancelar Citas', 'Cancelar citas confirmadas', 'clinical'),
+            ('appointments.check_in', 'Check-in de Citas', 'Registrar llegada de paciente', 'clinical'),
+            ('appointments.check_out', 'Check-out de Citas', 'Registrar salida de paciente', 'clinical'),
+            ('appointments.no_show', 'Marcar No-Show', 'Marcar paciente como ausente', 'clinical'),
+            
+            # 16.1 Appointment Slots
+            ('appointment_slots.view', 'Ver Slots de Citas', 'Ver disponibilidad de citas', 'clinical'),
+            ('appointment_slots.manage', 'Gestionar Slots', 'Generar y gestionar slots', 'administrative'),
+            ('appointment_slots.block', 'Bloquear Slots', 'Bloquear horarios no disponibles', 'administrative'),
+            ('appointment_slots.unblock', 'Desbloquear Slots', 'Desbloquear horarios previamente bloqueados', 'administrative'),
             
             # 16. Consultations
             ('consultations.view', 'Ver Consultas', 'Ver consultas completadas', 'clinical'),
