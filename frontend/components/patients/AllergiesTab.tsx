@@ -168,15 +168,15 @@ export default function AllergiesTab({ patientId }: AllergiesTabProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold text-red-900">Alergias del Paciente</h3>
-          <p className="mt-1 text-sm text-red-700">
+          <h3 className="text-lg text-red-900">Alergias del Paciente</h3>
+          <p className="mt-1 text-sm text-gray-700">
             Registro de alergias y reacciones adversas según estándares FHIR
           </p>
         </div>
         <PermissionGuard permission="patient_allergies.create">
           <button
             onClick={openCreateModal}
-            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
             <PlusIcon className="h-5 w-5 mr-2" />
             Agregar Alergia
@@ -186,10 +186,10 @@ export default function AllergiesTab({ patientId }: AllergiesTabProps) {
 
       {/* Allergies List */}
       {allergies.length === 0 ? (
-        <div className="text-center py-12 bg-red-50 rounded-lg border-2 border-dashed border-red-300">
+        <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
           <ExclamationTriangleIcon className="mx-auto h-12 w-12 text-red-400" />
-          <h3 className="mt-2 text-sm font-medium text-red-900">No hay alergias registradas</h3>
-          <p className="mt-1 text-sm text-red-600">
+          <h3 className="mt-2 text-sm font-medium text-gray-900">No hay alergias registradas</h3>
+          <p className="mt-1 text-sm text-gray-600">
             Comienza agregando la primera alergia del paciente.
           </p>
         </div>
@@ -198,25 +198,25 @@ export default function AllergiesTab({ patientId }: AllergiesTabProps) {
           {allergies.map((allergy) => (
             <div
               key={allergy.id}
-              className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6 hover:shadow-md transition-shadow"
+              className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm rounded-lg p-6 hover:shadow-md transition-shadow"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3 flex-1 min-w-0">
                   {getStatusIcon(allergy.clinical_status)}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center space-x-3">
-                      <p className="text-sm font-medium text-red-900 dark:text-red-100 truncate">
+                      <p className="text-lg font-medium text-gray-900 dark:text-gray-100 truncate">
                         {allergy.allergen.name}
                       </p>
                       {getSeverityBadge(allergy.reaction.severity)}
                       {getCriticalityBadge(allergy.criticality)}
                     </div>
                     {allergy.reaction.description && (
-                      <p className="mt-1 text-sm text-red-700 dark:text-red-300">
-                        <span className="font-medium">Reacción:</span> {allergy.reaction.description}
+                      <p className="mt-1 text-sm text-gray-900 dark:text-gray-100">
+                        <span className="font-medium text-gray-700">Reacción:</span> {allergy.reaction.description}
                       </p>
                     )}
-                    <div className="mt-2 flex items-center space-x-4 text-xs text-red-600 dark:text-red-400">
+                    <div className="mt-2 flex items-center space-x-4 text-xs text-gray-600 dark:text-gray-400">
                       <span>
                         <span className="font-medium">Estado:</span> {getStatusLabel(allergy.clinical_status)}
                       </span>
@@ -231,14 +231,14 @@ export default function AllergiesTab({ patientId }: AllergiesTabProps) {
                       )}
                     </div>
                     {allergy.notes && (
-                      <p className="mt-1 text-xs text-red-500 dark:text-red-400 italic">{allergy.notes}</p>
+                      <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 italic">{allergy.notes}</p>
                     )}
                   </div>
                 </div>
                 <div className="flex items-center space-x-2 ml-4">
                   <button
                     onClick={() => openViewModal(allergy)}
-                    className="p-2 text-red-600 hover:text-red-800 hover:bg-red-100 rounded-md transition-colors"
+                    className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors"
                     title="Ver detalles"
                   >
                     <EyeIcon className="h-4 w-4" />

@@ -98,34 +98,42 @@ Sistema completo de gestión médica (CRM/EHR) con funcionalidades de multi-tena
     - Severidad: mild, moderate, severe
     - Creadas con `seed_allergies.py`
 
-12. **PatientAllergy** (`backend/models/patient_allergy.py`)
+12. **MedicationCatalog** (`backend/models/medication.py`)
+    - **Catálogo global de medicamentos**
+    - **22 medicamentos** precargados con códigos NDC y RxNorm
+    - Categorías: antibiotic, analgesic, antihypertensive, antidiabetic, etc.
+    - Formas farmacéuticas y concentraciones
+    - Creadas con `seed_medications.py`
+
+13. **Condition** (`backend/models/condition.py`)
+    - **Catálogo global de condiciones médicas**
+    - **58 condiciones** precargadas en **15 categorías**
+    - Códigos ICD-10 y SNOMED CT
+    - Flag `is_chronic` para condiciones crónicas
+    - Categorías: cardiovascular, endocrine, respiratory, gastrointestinal, neurological, etc.
+    - Creadas con `seed_conditions.py`
+
+14. **PatientAllergy** (`backend/models/patient_allergy.py`)
     - **Cumple FHIR R4 AllergyIntolerance**
     - Registro de alergias del paciente
-    - FK opcional a catálogo `Allergy`
+    - FK opcional `allergy_id` → catálogo `Allergy`
     - Permite alergias personalizadas (no en catálogo)
     - Campos: allergen, reacciones, severidad, onset_date, notas
 
-13. **Medication** (`backend/models/medication.py`)
-    - **Catálogo global de medicamentos**
-    - **22 medicamentos** precargados
-    - Códigos estándar: RxNorm, NDC, ATC
-    - 11 categorías: antibiotic, analgesic, antihypertensive, etc.
-    - Información típica: dosis, vías, frecuencias
-    - `controlled_substance` (Schedule I-V)
-    - Creados con `seed_medications.py`
-
-14. **PatientMedication** (`backend/models/patient_medication.py`)
+15. **PatientMedication** (`backend/models/patient_medication.py`)
     - **Cumple FHIR R4 MedicationStatement**
     - Registro de medicamentos del paciente
-    - FK opcional a catálogo `Medication`
+    - FK opcional `medication_id` → catálogo `MedicationCatalog`
     - Permite medicamentos personalizados
     - Estados: active, completed, stopped, on-hold
     - Campos: dosage, route, frequency, prescriber, pharmacy, refills
     - Flag `is_prn` (PRN - según necesidad)
 
-15. **PatientCondition** (`backend/models/patient_condition.py`)
+16. **PatientCondition** (`backend/models/patient_condition.py`)
     - **Cumple FHIR R4 Condition**
     - Condiciones médicas/diagnósticos del paciente
+    - FK opcional `condition_id` → catálogo `Condition`
+    - Permite condiciones personalizadas
     - Códigos ICD-10/SNOMED CT
     - Estados: active, recurrence, relapse, inactive, remission, resolved
     - Severidad: mild, moderate, severe
@@ -153,10 +161,13 @@ Patient
   └─── PatientConditions (1:N)
 
 Allergy (Catalog)
-  └─── PatientAllergies (1:N, optional)
+  └─── PatientAllergies (1:N, optional FK)
 
-Medication (Catalog)
-  └─── PatientMedications (1:N, optional)
+MedicationCatalog (Catalog)
+  └─── PatientMedications (1:N, optional FK)
+
+Condition (Catalog)
+  └─── PatientConditions (1:N, optional FK)
 ```
 
 ## 🔌 API REST (100+ Endpoints)
@@ -328,7 +339,19 @@ PUT    /api/patient-medications/:id          # Actualizar medicamento
 DELETE /api/patient-medications/:id          # Eliminar medicamento
 ```
 
-#### 17. **Patient Conditions** (`/api/patient-conditions`) - 5 endpoints
+#### 17. **Conditions Catalog** (`/api/conditions`) - 8 endpoints
+```
+GET    /api/conditions                # Catálogo de condiciones (58 precargadas)
+GET    /api/conditions/:id            # Obtener por ID
+POST   /api/conditions                # Crear condición en catálogo
+PUT    /api/conditions/:id            # Actualizar condición
+DELETE /api/conditions/:id            # Eliminar condición
+GET    /api/conditions/categories     # Categorías (cardiovascular, endocrine, etc.)
+GET    /api/conditions/search?q=term  # Búsqueda por nombre
+GET    /api/conditions/stats          # Estadísticas del catálogo
+```
+
+#### 18. **Patient Conditions** (`/api/patient-conditions`) - 5 endpoints
 ```
 GET    /api/patient-conditions?patient_id=X  # Condiciones del paciente
 GET    /api/patient-conditions/:id           # Obtener por ID
@@ -406,9 +429,13 @@ Capa de servicios con type-safety completo en `frontend/lib/services/`:
     - Interface: `PatientMedication`, `CreatePatientMedicationData`
     - Métodos: CRUD con soporte para catálogo o medicamentos personalizados
 
-16. **patientConditionService.ts**
-    - Interface: `PatientCondition`, `CreateConditionData`
-    - Métodos: CRUD para condiciones médicas
+16. **conditionService.ts** (Catálogo)
+    - Interface: `Condition`, `CreateConditionData`
+    - Métodos: `getAll()`, `getById()`, `create()`, `update()`, `delete()`, `getCategories()`, `search()`, `getStats()`
+
+17. **patientConditionService.ts**
+    - Interface: `PatientCondition`, `CreatePatientConditionData`
+    - Métodos: CRUD con soporte para catálogo o condiciones personalizadas
 
 ### Uso de Servicios
 ```typescript
@@ -471,10 +498,14 @@ await patientMedicationService.create(patientId, {
     - `MedicationFormModal` (672 líneas) - Crear/editar con catálogo y fuzzy search
     - `MedicationDetailsModal` (207 líneas) - Vista completa de todos los campos FHIR
     - `MedicationsTab` (212 líneas) - Lista simplificada (solo básicos en cards)
-  - **Condiciones**: Próximamente
+  - **Condiciones**: Condition con arquitectura modular
+    - `ConditionFormModal` (685 líneas) - Crear/editar con catálogo y fuzzy search
+    - `ConditionsTab` (250+ líneas) - Lista y coordinación de modales
 
 ### 4. Catálogos Inteligentes
 - **22 alergias** precargadas (SNOMED CT)
+- **22 medicamentos** precargados (RxNorm, NDC)
+- **58 condiciones** precargadas (ICD-10, SNOMED CT) en 15 categorías
 - **22 medicamentos** precargados (RxNorm, NDC, ATC)
 - **Fuzzy search** para autocompletado inteligente
 - Permite agregar elementos personalizados no en catálogo
@@ -492,6 +523,11 @@ await patientMedicationService.create(patientId, {
 - **Sistema de tabs** para organización de información
 - **Cards simplificados** en listas (solo datos esenciales)
 - **Responsive design** completo con Tailwind CSS
+- **Design System** documentado (`frontend/DESIGN_SYSTEM.md`) - 750+ líneas
+  - Paleta de colores consistente
+  - Patrones de botones normalizados (blue-600 primary)
+  - Componentes white cards con jerarquía visual clara
+  - Guías de implementación y anti-patrones
 
 ### 6. Integración de Suscripciones
 - **LemonSqueezy** como procesador de pagos
@@ -524,6 +560,7 @@ DoctorCRM2.0/
 │   │   ├── patient_allergy.py
 │   │   ├── medication.py              # Catálogo
 │   │   ├── patient_medication.py
+│   │   ├── condition.py               # Catálogo
 │   │   ├── patient_condition.py
 │   │   └── [relationship tables]
 │   ├── routes/                         # 17 blueprints
@@ -541,6 +578,7 @@ DoctorCRM2.0/
 │   │   ├── patient_allergies.py
 │   │   ├── medications.py
 │   │   ├── patient_medications.py
+│   │   ├── conditions.py
 │   │   ├── patient_conditions.py
 │   │   └── [relationship routes]
 │   ├── migrations/                     # Migraciones DB
@@ -548,6 +586,7 @@ DoctorCRM2.0/
 │   ├── seed_default_specialties.py    # 39 especialidades
 │   ├── seed_allergies.py              # 22 alergias
 │   ├── seed_medications.py            # 22 medicamentos
+│   ├── seed_conditions.py             # 58 condiciones
 │   ├── reset_db.py                    # Reset completo DB
 │   └── requirements.txt
 │

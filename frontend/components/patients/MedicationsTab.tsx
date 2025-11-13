@@ -94,15 +94,15 @@ export default function MedicationsTab({ patientId }: MedicationsTabProps) {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h3 className="text-lg font-semibold text-indigo-900">Medicamentos</h3>
-          <p className="mt-1 text-sm text-indigo-700">
-            Medicamentos actuales y pasados siguiendo FHIR MedicationStatement
+          <h3 className="text-lg font-medium text-blue-600 dark:text-white">Medicación</h3>
+          <p className="mt-1 text-sm text-gray-600">
+            Medicación actual y pasada.
           </p>
         </div>
         <PermissionGuard permission="patient_medications.create">
           <button
             onClick={() => openModal()}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors shadow-sm"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
           >
             <PlusIcon className="w-5 h-5" />
             Agregar Medicamento
@@ -112,12 +112,12 @@ export default function MedicationsTab({ patientId }: MedicationsTabProps) {
 
       {/* Medications List */}
       {medications.length === 0 ? (
-        <div className="text-center py-12 bg-indigo-50 rounded-lg border-2 border-dashed border-indigo-300">
-          <p className="text-indigo-600">No hay medicamentos registrados</p>
+        <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+          <p className="text-gray-600">No hay medicamentos registrados</p>
           <PermissionGuard permission="patient_medications.create">
             <button
               onClick={() => openModal()}
-              className="mt-4 text-indigo-700 hover:text-indigo-800 font-medium"
+              className="mt-4 text-indigo-600 hover:text-indigo-700 font-medium"
             >
               Agregar primer medicamento
             </button>
@@ -128,32 +128,32 @@ export default function MedicationsTab({ patientId }: MedicationsTabProps) {
           {medications.map((medication) => (
             <div
               key={medication.id}
-              className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg p-4 hover:shadow-md transition-shadow"
+              className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm rounded-lg p-4 hover:shadow-md transition-shadow"
             >
               <div className="flex justify-between items-start">
                 <div className="flex-1">
                   {/* Nombre del medicamento */}
-                  <h4 className="text-lg font-semibold text-indigo-900 dark:text-indigo-100 mb-3">
+                  <h4 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-3">
                     {medication.medication.name}
                   </h4>
 
                   {/* INFORMACIÓN BÁSICA - Solo dosis, vía y frecuencia */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
                     <div>
-                      <span className="font-medium text-indigo-800 dark:text-indigo-200">Dosis:</span>
-                      <span className={`ml-2 ${medication.dosage.dose ? 'text-indigo-900 dark:text-indigo-100' : 'text-indigo-400 italic'}`}>
+                      <span className="font-medium text-gray-700 dark:text-gray-300">Dosis:</span>
+                      <span className={`ml-2 ${medication.dosage.dose ? 'text-gray-900 dark:text-gray-100' : 'text-gray-400 italic'}`}>
                         {medication.dosage.dose || 'No especificada'}
                       </span>
                     </div>
                     <div>
-                      <span className="font-medium text-indigo-800 dark:text-indigo-200">Vía:</span>
-                      <span className={`ml-2 ${medication.dosage.route ? 'text-indigo-900 dark:text-indigo-100' : 'text-indigo-400 italic'}`}>
+                      <span className="font-medium text-gray-700 dark:text-gray-300">Vía:</span>
+                      <span className={`ml-2 ${medication.dosage.route ? 'text-gray-900 dark:text-gray-100' : 'text-gray-400 italic'}`}>
                         {medication.dosage.route || 'No especificada'}
                       </span>
                     </div>
                     <div>
-                      <span className="font-medium text-indigo-800 dark:text-indigo-200">Frecuencia:</span>
-                      <span className={`ml-2 ${medication.dosage.frequency ? 'text-indigo-900 dark:text-indigo-100' : 'text-indigo-400 italic'}`}>
+                      <span className="font-medium text-gray-700 dark:text-gray-300">Frecuencia:</span>
+                      <span className={`ml-2 ${medication.dosage.frequency ? 'text-gray-900 dark:text-gray-100' : 'text-gray-400 italic'}`}>
                         {medication.dosage.frequency || 'No especificada'}
                       </span>
                     </div>
@@ -163,7 +163,7 @@ export default function MedicationsTab({ patientId }: MedicationsTabProps) {
                 <div className="flex items-center gap-2 ml-4">
                   <button
                     onClick={() => openDetailsModal(medication)}
-                    className="p-2 text-indigo-600 hover:bg-indigo-100 rounded-lg transition-colors"
+                    className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
                     title="Ver detalles completos"
                   >
                     <EyeIcon className="w-5 h-5" />

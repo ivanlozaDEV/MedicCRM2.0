@@ -44,7 +44,8 @@ from routes import (
     roles_bp, permissions_bp, specialties_bp,
     role_permissions_bp, user_specialties_bp, webhooks_bp,
     patients_bp, patient_contacts_bp,
-    allergies_bp, patient_allergies_bp, medications_bp, patient_medications_bp, patient_conditions_bp
+    allergies_bp, patient_allergies_bp, medications_bp, patient_medications_bp,
+    conditions_bp, patient_conditions_bp
 )
 
 app.register_blueprint(auth_bp)
@@ -63,6 +64,7 @@ app.register_blueprint(allergies_bp)
 app.register_blueprint(patient_allergies_bp)
 app.register_blueprint(medications_bp)
 app.register_blueprint(patient_medications_bp)
+app.register_blueprint(conditions_bp)
 app.register_blueprint(patient_conditions_bp)
 
 # Create tables
@@ -84,7 +86,9 @@ with app.app_context():
     print("  - /api/patient-contacts")
     print("  - /api/allergies")
     print("  - /api/patient-allergies")
+    print("  - /api/medications")
     print("  - /api/patient-medications")
+    print("  - /api/conditions")
     print("  - /api/patient-conditions")
 
 # Health check endpoint

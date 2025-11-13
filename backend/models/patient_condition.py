@@ -20,6 +20,14 @@ class PatientCondition(db.Model):
         index=True
     )
     
+    # Link to Condition catalog (optional)
+    condition_id = db.Column(
+        db.Integer,
+        db.ForeignKey('conditions.id', ondelete='SET NULL'),
+        nullable=True,
+        index=True
+    )
+    
     # Condition Information
     condition_name = db.Column(db.String(255), nullable=False)  # Name of the condition
     condition_code = db.Column(db.String(50))  # ICD-10, SNOMED CT code
@@ -57,6 +65,7 @@ class PatientCondition(db.Model):
     
     # Relationships
     patient = db.relationship('Patient', backref=db.backref('conditions', lazy='dynamic', cascade='all, delete-orphan'))
+    condition_catalog = db.relationship('Condition', backref='patient_conditions')
     recorder = db.relationship('User', foreign_keys=[recorder_id])
     
     def __repr__(self):
@@ -81,6 +90,7 @@ class PatientCondition(db.Model):
         data = {
             'id': self.id,
             'patient_id': self.patient_id,
+            'condition_id': self.condition_id,
             'condition': {
                 'name': self.condition_name,
                 'code': self.condition_code,
@@ -107,6 +117,17 @@ class PatientCondition(db.Model):
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }
         
+        # Include catalog info if available
+        if self.condition_catalog:
+            data['catalog_info'] = {
+                'id': self.condition_catalog.id,
+                'name': self.condition_catalog.name,
+                'category': self.condition_catalog.category,
+                'icd10_code': self.condition_catalog.icd10_code,
+                'snomed_code': self.condition_catalog.snomed_code,
+                'is_chronic': self.condition_catalog.is_chronic
+            }
+        
         if include_recorder and self.recorder:
             data['recorder'] = {
                 'id': self.recorder.id,
@@ -121,6 +142,7 @@ class PatientCondition(db.Model):
         """Create a new patient condition."""
         condition = PatientCondition(
             patient_id=data['patient_id'],
+            condition_id=data.get('condition_id'),  # Link to catalog if provided
             condition_name=data['condition_name'],
             condition_code=data.get('condition_code'),
             condition_system=data.get('condition_system'),
@@ -145,6 +167,8 @@ class PatientCondition(db.Model):
     
     def update(self, data):
         """Update condition information."""
+        if 'condition_id' in data:
+            self.condition_id = data['condition_id']
         if 'condition_name' in data:
             self.condition_name = data['condition_name']
         if 'condition_code' in data:

@@ -18,6 +18,7 @@ from models.allergy import Allergy
 from models.patient_allergy import PatientAllergy
 from models.medication import Medication
 from models.patient_medication import PatientMedication
+from models.condition import Condition
 from models.patient_condition import PatientCondition
 
 __all__ = [
@@ -37,6 +38,7 @@ __all__ = [
     'PatientAllergy',
     'Medication',
     'PatientMedication',
+    'Condition',
     'PatientCondition'
 ]
 

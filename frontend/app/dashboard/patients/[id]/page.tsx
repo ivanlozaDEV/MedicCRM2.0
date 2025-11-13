@@ -18,6 +18,7 @@ import {
 import EmergencyContactsTab from '@/components/patients/EmergencyContactsTab'
 import AllergiesTab from '@/components/patients/AllergiesTab'
 import MedicationsTab from '@/components/patients/MedicationsTab'
+import ConditionsTab from '@/components/patients/ConditionsTab'
 
 type TabType = 'general' | 'contacts' | 'allergies' | 'medications' | 'conditions'
 
@@ -227,9 +228,7 @@ export default function PatientDetailPage() {
           <MedicationsTab patientId={patientId} />
         )}
         {activeTab === 'conditions' && (
-          <div className="text-center py-12 text-gray-500">
-            Tab de Condiciones FHIR (próximamente)
-          </div>
+          <ConditionsTab patientId={patientId} />
         )}
       </div>
     </div>
@@ -257,59 +256,59 @@ function GeneralInfoTab({
   return (
     <div className="space-y-8">
       {/* Personal Information */}
-      <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-6 border border-blue-200 dark:border-blue-800">
-        <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-4 flex items-center">
-          <UserIcon className="h-5 w-5 mr-2" />
+      <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+        <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+          <UserIcon className="h-5 w-5 mr-2 text-blue-600" />
           Información Personal
         </h3>
         <dl className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
           <div>
-            <dt className="text-sm font-medium text-blue-800 dark:text-blue-200">Nombre Completo</dt>
-            <dd className="mt-1 text-sm text-blue-900 dark:text-blue-100">{patient.personal_info.full_name}</dd>
+            <dt className="text-sm font-medium text-gray-700">Nombre Completo</dt>
+            <dd className="mt-1 text-sm text-gray-900">{patient.personal_info.full_name}</dd>
           </div>
           <div>
-            <dt className="text-sm font-medium text-blue-800 dark:text-blue-200">Fecha de Nacimiento</dt>
-            <dd className="mt-1 text-sm text-blue-900 dark:text-blue-100">
+            <dt className="text-sm font-medium text-gray-700">Fecha de Nacimiento</dt>
+            <dd className="mt-1 text-sm text-gray-900">
               {formatDate(patient.personal_info.date_of_birth)}
             </dd>
           </div>
           <div>
-            <dt className="text-sm font-medium text-blue-800 dark:text-blue-200">Género</dt>
-            <dd className="mt-1 text-sm text-blue-900 dark:text-blue-100">
+            <dt className="text-sm font-medium text-gray-700">Género</dt>
+            <dd className="mt-1 text-sm text-gray-900">
               {patient.personal_info.gender === 'male' ? 'Masculino' : 
                patient.personal_info.gender === 'female' ? 'Femenino' : 
                patient.personal_info.gender === 'other' ? 'Otro' : 'No especificado'}
             </dd>
           </div>
           <div>
-            <dt className="text-sm font-medium text-blue-800 dark:text-blue-200">Edad</dt>
-            <dd className="mt-1 text-sm text-blue-900 dark:text-blue-100">{patient.personal_info.age} años</dd>
+            <dt className="text-sm font-medium text-gray-700">Edad</dt>
+            <dd className="mt-1 text-sm text-gray-900">{patient.personal_info.age} años</dd>
           </div>
         </dl>
       </div>
 
       {/* Contact Information */}
-      <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-6 border border-green-200 dark:border-green-800">
-        <h3 className="text-lg font-semibold text-green-900 dark:text-green-100 mb-4 flex items-center">
-          <EnvelopeIcon className="h-5 w-5 mr-2" />
+      <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+        <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+          <EnvelopeIcon className="h-5 w-5 mr-2 text-green-600" />
           Información de Contacto
         </h3>
         <dl className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
           <div>
-            <dt className="text-sm font-medium text-green-800 dark:text-green-200">Email</dt>
-            <dd className="mt-1 text-sm text-green-900 dark:text-green-100">{patient.contact_info.email || 'No especificado'}</dd>
+            <dt className="text-sm font-medium text-gray-700">Email</dt>
+            <dd className="mt-1 text-sm text-gray-900">{patient.contact_info.email || 'No especificado'}</dd>
           </div>
           <div>
-            <dt className="text-sm font-medium text-green-800 dark:text-green-200">Teléfono</dt>
-            <dd className="mt-1 text-sm text-green-900 dark:text-green-100">{patient.contact_info.phone || 'No especificado'}</dd>
+            <dt className="text-sm font-medium text-gray-700">Teléfono</dt>
+            <dd className="mt-1 text-sm text-gray-900">{patient.contact_info.phone || 'No especificado'}</dd>
           </div>
           <div>
-            <dt className="text-sm font-medium text-green-800 dark:text-green-200">Celular</dt>
-            <dd className="mt-1 text-sm text-green-900 dark:text-green-100">{patient.contact_info.mobile_phone || 'No especificado'}</dd>
+            <dt className="text-sm font-medium text-gray-700">Celular</dt>
+            <dd className="mt-1 text-sm text-gray-900">{patient.contact_info.mobile_phone || 'No especificado'}</dd>
           </div>
           <div className="sm:col-span-2">
-            <dt className="text-sm font-medium text-green-800 dark:text-green-200">Dirección</dt>
-            <dd className="mt-1 text-sm text-green-900 dark:text-green-100">
+            <dt className="text-sm font-medium text-gray-700">Dirección</dt>
+            <dd className="mt-1 text-sm text-gray-900">
               {patient.contact_info.address.full_address || 'No especificada'}
             </dd>
           </div>
@@ -317,44 +316,44 @@ function GeneralInfoTab({
       </div>
 
       {/* Identification */}
-      <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-6 border border-purple-200 dark:border-purple-800">
-        <h3 className="text-lg font-semibold text-purple-900 dark:text-purple-100 mb-4 flex items-center">
-          <IdentificationIcon className="h-5 w-5 mr-2" />
+      <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+        <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+          <IdentificationIcon className="h-5 w-5 mr-2 text-purple-600" />
           Identificación
         </h3>
         <dl className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
           <div>
-            <dt className="text-sm font-medium text-purple-800 dark:text-purple-200">Tipo de ID</dt>
-            <dd className="mt-1 text-sm text-purple-900 dark:text-purple-100">{patient.identification.id_type || 'No especificado'}</dd>
+            <dt className="text-sm font-medium text-gray-700">Tipo de ID</dt>
+            <dd className="mt-1 text-sm text-gray-900">{patient.identification.id_type || 'No especificado'}</dd>
           </div>
           <div>
-            <dt className="text-sm font-medium text-purple-800 dark:text-purple-200">Número de ID</dt>
-            <dd className="mt-1 text-sm text-purple-900 dark:text-purple-100">{patient.identification.id_number || 'No especificado'}</dd>
+            <dt className="text-sm font-medium text-gray-700">Número de ID</dt>
+            <dd className="mt-1 text-sm text-gray-900">{patient.identification.id_number || 'No especificado'}</dd>
           </div>
         </dl>
       </div>
 
       {/* Medical Information */}
-      <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-6 border border-red-200 dark:border-red-800">
-        <h3 className="text-lg font-semibold text-red-900 dark:text-red-100 mb-4 flex items-center">
-          <HeartIcon className="h-5 w-5 mr-2" />
+      <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+        <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+          <HeartIcon className="h-5 w-5 mr-2 text-red-600" />
           Información Médica
         </h3>
         <dl className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
           <div>
-            <dt className="text-sm font-medium text-red-800 dark:text-red-200">Tipo de Sangre</dt>
-            <dd className="mt-1 text-sm text-red-900 dark:text-red-100">{patient.medical_info.blood_type || 'No especificado'}</dd>
+            <dt className="text-sm font-medium text-gray-700">Tipo de Sangre</dt>
+            <dd className="mt-1 text-sm text-gray-900">{patient.medical_info.blood_type || 'No especificado'}</dd>
           </div>
           <div>
-            <dt className="text-sm font-medium text-red-800 dark:text-red-200">Seguro Médico</dt>
-            <dd className="mt-1 text-sm text-red-900 dark:text-red-100">
+            <dt className="text-sm font-medium text-gray-700">Seguro Médico</dt>
+            <dd className="mt-1 text-sm text-gray-900">
               {patient.medical_info.insurance_provider || 'Sin seguro'}
             </dd>
           </div>
           {patient.medical_info.insurance_policy_number && (
             <div className="sm:col-span-2">
-              <dt className="text-sm font-medium text-red-800 dark:text-red-200">Número de Póliza</dt>
-              <dd className="mt-1 text-sm text-red-900 dark:text-red-100">{patient.medical_info.insurance_policy_number}</dd>
+              <dt className="text-sm font-medium text-gray-700">Número de Póliza</dt>
+              <dd className="mt-1 text-sm text-gray-900">{patient.medical_info.insurance_policy_number}</dd>
             </div>
           )}
         </dl>
@@ -362,25 +361,28 @@ function GeneralInfoTab({
 
       {/* Additional Information */}
       {(patient.additional_info.occupation || patient.additional_info.marital_status || patient.additional_info.notes) && (
-        <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-6 border border-amber-200 dark:border-amber-800">
-          <h3 className="text-lg font-semibold text-amber-900 dark:text-amber-100 mb-4">Información Adicional</h3>
+        <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+          <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+            <span className="h-5 w-5 mr-2 text-amber-600">📋</span>
+            Información Adicional
+          </h3>
           <dl className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
             {patient.additional_info.occupation && (
               <div>
-                <dt className="text-sm font-medium text-amber-800 dark:text-amber-200">Ocupación</dt>
-                <dd className="mt-1 text-sm text-amber-900 dark:text-amber-100">{patient.additional_info.occupation}</dd>
+                <dt className="text-sm font-medium text-gray-700">Ocupación</dt>
+                <dd className="mt-1 text-sm text-gray-900">{patient.additional_info.occupation}</dd>
               </div>
             )}
             {patient.additional_info.marital_status && (
               <div>
-                <dt className="text-sm font-medium text-amber-800 dark:text-amber-200">Estado Civil</dt>
-                <dd className="mt-1 text-sm text-amber-900 dark:text-amber-100">{patient.additional_info.marital_status}</dd>
+                <dt className="text-sm font-medium text-gray-700">Estado Civil</dt>
+                <dd className="mt-1 text-sm text-gray-900">{patient.additional_info.marital_status}</dd>
               </div>
             )}
             {patient.additional_info.notes && (
               <div className="sm:col-span-2">
-                <dt className="text-sm font-medium text-amber-800 dark:text-amber-200">Notas</dt>
-                <dd className="mt-1 text-sm text-amber-900 dark:text-amber-100">{patient.additional_info.notes}</dd>
+                <dt className="text-sm font-medium text-gray-700">Notas</dt>
+                <dd className="mt-1 text-sm text-gray-900">{patient.additional_info.notes}</dd>
               </div>
             )}
           </dl>

@@ -8,10 +8,19 @@ import { apiRequest } from '../api';
 export interface PatientCondition {
   id: number;
   patient_id: number;
+  condition_id?: number;
   condition: {
     name: string;
     code?: string;
     system?: string;
+  };
+  catalog_info?: {
+    id: number;
+    name: string;
+    category?: string;
+    icd10_code?: string;
+    snomed_code?: string;
+    is_chronic: boolean;
   };
   clinical_status: string;
   verification_status: string;
@@ -36,6 +45,7 @@ export interface PatientCondition {
 
 export interface CreatePatientConditionData {
   patient_id: number;
+  condition_id?: number;
   condition_name: string;
   condition_code?: string;
   condition_system?: string;

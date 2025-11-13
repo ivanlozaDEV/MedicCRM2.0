@@ -50,3 +50,6 @@ export type { PatientMedication, CreatePatientMedicationData, UpdatePatientMedic
 
 export { patientConditionService } from './patientConditionService';
 export type { PatientCondition, CreatePatientConditionData, UpdatePatientConditionData } from './patientConditionService';
+
+export { conditionService } from './conditionService';
+export type { Condition, CreateConditionData, UpdateConditionData } from './conditionService';
