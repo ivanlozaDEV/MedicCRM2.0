@@ -1,0 +1,32 @@
+{
+  "name": "doctorcrm-mcp-server",
+  "version": "1.0.0",
+  "description": "MCP Server for DoctorCRM 2.0 - Medical CRM/EHR System",
+  "type": "module",
+  "bin": {
+    "doctorcrm-mcp": "./build/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "prepare": "npm run build"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "doctorcrm",
+    "medical",
+    "crm",
+    "ehr",
+    "fhir"
+  ],
+  "author": "DoctorCRM Team",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.1",
+    "typescript": "^5.7.2"
+  }
+}

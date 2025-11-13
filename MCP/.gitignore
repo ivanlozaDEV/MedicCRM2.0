@@ -1,0 +1,27 @@
+# Ignore node modules
+node_modules/
+
+# Ignore build output
+build/
+dist/
+
+# Ignore TypeScript cache
+*.tsbuildinfo
+
+# Ignore logs
+*.log
+npm-debug.log*
+
+# Ignore OS files
+.DS_Store
+Thumbs.db
+
+# Ignore IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Ignore test coverage
+coverage/
