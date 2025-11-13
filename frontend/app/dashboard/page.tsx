@@ -132,44 +132,44 @@ export default function DashboardPage() {
       title: 'Pacientes Totales',
       value: stats.patientsCount,
       icon: (
-        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+        <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 715.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
         </svg>
       ),
-      colorClass: 'bg-blue-600',
+      colorClass: 'bg-blue-50',
       permission: userPermissions.canViewPatients,
     },
     {
       title: 'Citas Hoy',
       value: stats.appointmentsTodayCount,
       icon: (
-        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
         </svg>
       ),
-      colorClass: 'bg-green-600',
+      colorClass: 'bg-blue-50',
       permission: userPermissions.canViewAppointments,
     },
     {
       title: 'Consultas Hoy',
       value: stats.consultationsTodayCount,
       icon: (
-        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
         </svg>
       ),
-      colorClass: 'bg-teal-600',
+      colorClass: 'bg-blue-50',
       permission: userPermissions.canViewConsultations,
     },
     {
       title: 'Citas Pendientes',
       value: stats.pendingAppointmentsCount,
       icon: (
-        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
       ),
-      colorClass: 'bg-orange-600',
+      colorClass: 'bg-blue-50',
       permission: userPermissions.canViewAppointments,
     },
   ];
@@ -179,44 +179,44 @@ export default function DashboardPage() {
       title: 'Usuarios Activos',
       value: stats.userCount,
       icon: (
-        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
         </svg>
       ),
-      colorClass: 'bg-blue-600',
+      colorClass: 'bg-blue-50',
       permission: hasPermission('users.view'),
     },
     {
       title: 'Roles Configurados',
       value: stats.roleCount,
       icon: (
-        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
         </svg>
       ),
-      colorClass: 'bg-purple-600',
+      colorClass: 'bg-blue-50',
       permission: hasPermission('roles.view'),
     },
     {
       title: 'Especialidades',
       value: stats.specialtyCount,
       icon: (
-        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
         </svg>
       ),
-      colorClass: 'bg-pink-600',
+      colorClass: 'bg-blue-50',
       permission: hasPermission('specialties.view'),
     },
     {
       title: 'Límite de Usuarios',
       value: `${stats.userCount}/${stats.userLimit}`,
       icon: (
-        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
         </svg>
       ),
-      colorClass: 'bg-green-600',
+      colorClass: 'bg-blue-50',
       permission: hasPermission('organizations.view'),
     },
   ];
@@ -397,18 +397,16 @@ export default function DashboardPage() {
                     {visibleClinicalStats.map((stat, index) => (
                       <div
                         key={index}
-                        className="bg-gradient-to-br from-gray-50 to-white rounded-lg border border-gray-200 p-3 hover:shadow-md transition-all"
+                        className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-sm transition-shadow"
                       >
-                        <div className="flex flex-col">
-                          <div className="flex items-center justify-between mb-2">
-                            <div className={`${stat.colorClass} rounded-md p-1.5`}>
-                              <div className="w-4 h-4 flex items-center justify-center">
-                                {stat.icon}
-                              </div>
-                            </div>
+                        <div className="flex items-center justify-between mb-3">
+                          <div className={`${stat.colorClass} rounded-lg p-2`}>
+                            {stat.icon}
                           </div>
+                        </div>
+                        <div className="space-y-1">
                           <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
-                          <p className="text-[10px] font-medium text-gray-600 mt-0.5 leading-tight">{stat.title}</p>
+                          <p className="text-sm font-medium text-gray-700">{stat.title}</p>
                         </div>
                       </div>
                     ))}
@@ -425,9 +423,9 @@ export default function DashboardPage() {
                       <button
                         key={index}
                         onClick={action.action}
-                        className={`flex items-start space-x-4 p-4 rounded-lg border-2 border-transparent hover:border-blue-300 hover:shadow-md transition-all w-full text-left ${action.color}`}
+                        className="flex items-start space-x-4 p-4 bg-white rounded-lg border border-gray-200 hover:shadow-sm hover:bg-gray-50 transition-all w-full text-left"
                       >
-                        <div className="rounded-lg p-2">
+                        <div className={`rounded-lg p-2 ${action.color}`}>
                           {action.icon}
                         </div>
                         <div className="flex-1">
@@ -466,18 +464,16 @@ export default function DashboardPage() {
                         {visibleAdministrativeStats.map((stat, index) => (
                           <div
                             key={index}
-                            className="bg-gradient-to-br from-gray-50 to-white rounded-lg border border-gray-200 p-3 hover:shadow-md transition-all"
+                            className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-sm transition-shadow"
                           >
-                            <div className="flex flex-col">
-                              <div className="flex items-center justify-between mb-2">
-                                <div className={`${stat.colorClass} rounded-md p-1.5`}>
-                                  <div className="w-4 h-4 flex items-center justify-center">
-                                    {stat.icon}
-                                  </div>
-                                </div>
+                            <div className="flex items-center justify-between mb-3">
+                              <div className={`${stat.colorClass} rounded-lg p-2`}>
+                                {stat.icon}
                               </div>
+                            </div>
+                            <div className="space-y-1">
                               <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
-                              <p className="text-[10px] font-medium text-gray-600 mt-0.5 leading-tight">{stat.title}</p>
+                              <p className="text-sm font-medium text-gray-700">{stat.title}</p>
                             </div>
                           </div>
                         ))}
@@ -494,9 +490,9 @@ export default function DashboardPage() {
                           <button
                             key={index}
                             onClick={action.action}
-                            className={`flex items-start space-x-4 p-4 rounded-lg border-2 border-transparent hover:border-purple-300 hover:shadow-md transition-all w-full text-left ${action.color}`}
+                            className="flex items-start space-x-4 p-4 bg-white rounded-lg border border-gray-200 hover:shadow-sm hover:bg-gray-50 transition-all w-full text-left"
                           >
-                            <div className="rounded-lg p-2">
+                            <div className={`rounded-lg p-2 ${action.color}`}>
                               {action.icon}
                             </div>
                             <div className="flex-1">

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { patientService, type Patient } from '@/lib/services'
+import { useAuth } from '@/contexts/AuthContext'
 import { usePermissions, PermissionGuard } from '@/lib/hooks/usePermissions'
 import { 
   PlusIcon, 
@@ -15,6 +16,7 @@ import {
 
 export default function PatientsPage() {
   const router = useRouter()
+  const { organization } = useAuth()
   const { hasPermission, isLoading: permissionsLoading } = usePermissions()
   const [patients, setPatients] = useState<Patient[]>([])
   const [loading, setLoading] = useState(true)
@@ -31,13 +33,18 @@ export default function PatientsPage() {
 
   // Fetch patients
   useEffect(() => {
-    fetchPatients()
-  }, [search, statusFilter, genderFilter])
+    if (organization) {
+      fetchPatients()
+    }
+  }, [organization, search, statusFilter, genderFilter])
 
   const fetchPatients = async () => {
+    if (!organization) return
+    
     try {
       setLoading(true)
       const params: any = {
+        organization_id: organization.id,
         include_contacts: false
       }
       

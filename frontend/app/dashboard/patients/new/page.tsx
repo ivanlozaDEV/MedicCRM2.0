@@ -9,12 +9,12 @@ import { useAuth } from '@/contexts/AuthContext'
 export default function NewPatientPage() {
   const router = useRouter()
   const { hasPermission } = usePermissions()
-  const { user } = useAuth()
+  const { user, organization } = useAuth()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   
   const [formData, setFormData] = useState<CreatePatientData>({
-    organization_id: user?.organization_id || 0,
+    organization_id: organization?.id || 0,
     first_name: '',
     last_name: '',
     date_of_birth: '',
@@ -47,6 +47,13 @@ export default function NewPatientPage() {
       router.push('/dashboard/patients')
     }
   }, [hasPermission, router])
+
+  // Update organization_id when organization is loaded
+  useEffect(() => {
+    if (organization?.id) {
+      setFormData(prev => ({ ...prev, organization_id: organization.id }))
+    }
+  }, [organization])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
