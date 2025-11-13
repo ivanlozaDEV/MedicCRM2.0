@@ -53,3 +53,10 @@ export type { PatientCondition, CreatePatientConditionData, UpdatePatientConditi
 
 export { conditionService } from './conditionService';
 export type { Condition, CreateConditionData, UpdateConditionData } from './conditionService';
+
+// Appointment System Services
+export * from './appointmentTypeService';
+export * from './roomService';
+export * from './doctorScheduleService';
+export * from './appointmentService';
+export * from './appointmentSlotService';
