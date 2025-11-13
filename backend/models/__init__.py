@@ -20,6 +20,11 @@ from models.medication import Medication
 from models.patient_medication import PatientMedication
 from models.condition import Condition
 from models.patient_condition import PatientCondition
+from models.appointment_type import AppointmentType
+from models.room import Room
+from models.doctor_schedule import DoctorSchedule
+from models.appointment import Appointment
+from models.appointment_slot import AppointmentSlot
 
 __all__ = [
     'db',
@@ -39,6 +44,11 @@ __all__ = [
     'Medication',
     'PatientMedication',
     'Condition',
-    'PatientCondition'
+    'PatientCondition',
+    'AppointmentType',
+    'Room',
+    'DoctorSchedule',
+    'Appointment',
+    'AppointmentSlot'
 ]
 

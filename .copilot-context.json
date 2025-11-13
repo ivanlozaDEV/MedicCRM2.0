@@ -1,0 +1,78 @@
+{
+  "project": "DoctorCRM 2.0",
+  "description": "Multi-tenant Medical CRM/EHR System with FHIR R4 compliance",
+  
+  "stack": {
+    "backend": {
+      "language": "Python 3.13.2",
+      "framework": "Flask 3.1.0",
+      "database": "PostgreSQL 14.19",
+      "orm": "SQLAlchemy",
+      "auth": "JWT (Flask-JWT-Extended)",
+      "port": 5001
+    },
+    "frontend": {
+      "framework": "Next.js 16.0.1 (App Router)",
+      "react": "19.2.0",
+      "typescript": "^5",
+      "styling": "TailwindCSS ^4",
+      "port": 3000
+    }
+  },
+
+  "models": [
+    "Organization - Multi-tenant orgs with branding",
+    "User - System users with medical credentials",
+    "Subscription - LemonSqueezy integration",
+    "Role - 5 system roles + custom",
+    "Permission - 120 granular permissions",
+    "Specialty - 39 medical specialties",
+    "Patient - FHIR-compliant patient records",
+    "PatientContact - Emergency contacts",
+    "Allergy - Allergy catalog",
+    "PatientAllergy - Patient-specific allergies",
+    "Medication - Medication catalog",
+    "PatientMedication - Active prescriptions",
+    "Condition - Medical conditions (ICD-10)",
+    "PatientCondition - Patient diagnoses",
+    "RolePermission - Role↔Permission junction",
+    "UserRole - User↔Role junction",
+    "UserSpecialty - User↔Specialty junction"
+  ],
+
+  "routes": [
+    "auth - Login/signup/JWT",
+    "organizations - Org CRUD",
+    "users - User management",
+    "subscriptions - Billing/plans",
+    "roles - Role management",
+    "permissions - Permission listing",
+    "specialties - Medical specialties",
+    "patients - Patient CRUD/search",
+    "patient_contacts - Emergency contacts",
+    "allergies - Allergy catalog",
+    "patient_allergies - Patient allergies",
+    "medications - Medication catalog",
+    "patient_medications - Prescriptions",
+    "conditions - Conditions catalog",
+    "patient_conditions - Patient diagnoses",
+    "webhooks - LemonSqueezy webhooks"
+  ],
+
+  "key_features": [
+    "Multi-tenant SaaS architecture",
+    "RBAC with 120 permissions",
+    "FHIR R4 compliance",
+    "LemonSqueezy integration",
+    "Organization-based routing (/:slug/dashboard)"
+  ],
+
+  "important_files": {
+    "backend_main": "backend/app.py",
+    "models_dir": "backend/models/",
+    "routes_dir": "backend/routes/",
+    "frontend_main": "frontend/app/page.tsx",
+    "dashboard": "frontend/app/[slug]/dashboard/",
+    "auth_context": "frontend/contexts/AuthContext.tsx"
+  }
+}
